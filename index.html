@@ -1,288 +1,320 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Talkie-Walkie PeerJS</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Talkie-Walkie</title>
     <style>
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background: #f0f4f8;
+            background: #0b1120;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
         }
-        .card {
-            background: white;
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        h1 { margin-top: 0; color: #1a202c; }
-        .mon-id {
-            background: #e2e8f0;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: bold;
-            text-align: center;
-            margin: 15px 0;
-            font-size: 1.2rem;
-        }
-        input, button {
-            padding: 12px 16px;
-            border-radius: 8px;
-            border: 1px solid #cbd5e0;
-            font-size: 1rem;
+        .container {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 24px;
+            max-width: 450px;
             width: 100%;
-            margin: 6px 0;
-        }
-        button {
-            background: #3182ce;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
             color: white;
+        }
+        h1 { font-size: 24px; text-align: center; margin-bottom: 20px; }
+        .id-box {
+            background: #0f172a;
+            padding: 14px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 18px;
             font-weight: bold;
+            color: #38bdf8;
+            word-break: break-all;
+            margin-bottom: 16px;
+            border: 1px solid #334155;
+        }
+        .status {
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 16px;
+            background: #334155;
+            color: #94a3b8;
+        }
+        .status.on { background: #065f46; color: #6ee7b7; }
+        .status.off { background: #7f1d1d; color: #fca5a5; }
+        .status.calling { background: #713f12; color: #fcd34d; }
+        input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
             border: none;
+            background: #0f172a;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 10px;
+            border: 1px solid #334155;
+        }
+        input::placeholder { color: #64748b; }
+        .btn {
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
             cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
             transition: 0.2s;
         }
-        button:hover { background: #2b6cb0; }
-        button:active { transform: scale(0.97); }
-        button:disabled {
-            background: #a0aec0;
-            cursor: not-allowed;
-        }
-        .btn-danger { background: #e53e3e; }
-        .btn-danger:hover { background: #c53030; }
-        .btn-success { background: #38a169; }
-        .btn-success:hover { background: #2f855a; }
-        .status {
-            text-align: center;
-            padding: 10px;
-            border-radius: 8px;
-            margin: 10px 0;
-            font-weight: bold;
-        }
-        .status.connected { background: #c6f6d5; color: #22543d; }
-        .status.disconnected { background: #fed7d7; color: #742a2a; }
-        .status.waiting { background: #fefcbf; color: #744210; }
-        .flex {
-            display: flex;
-            gap: 8px;
-        }
-        .flex > * { flex: 1; }
+        .btn:active { transform: scale(0.96); }
+        .btn-call { background: #2563eb; color: white; }
+        .btn-call:disabled { background: #475569; cursor: not-allowed; }
+        .btn-hangup { background: #dc2626; color: white; }
+        .btn-hangup:disabled { background: #475569; cursor: not-allowed; }
+        .btn-mute { background: #6366f1; color: white; }
+        .btn-mute:disabled { background: #475569; cursor: not-allowed; }
+        .btn-mute.active { background: #eab308; color: #0f172a; }
         .logs {
-            background: #1a202c;
-            color: #68d391;
+            background: #0f172a;
             padding: 12px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 0.85rem;
-            max-height: 150px;
+            border-radius: 12px;
+            height: 80px;
             overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            color: #94a3b8;
             margin-top: 12px;
+            border: 1px solid #334155;
         }
+        .flex-row {
+            display: flex;
+            gap: 10px;
+        }
+        .flex-row .btn { flex: 1; }
     </style>
 </head>
 <body>
 
-<div class="card">
+<div class="container">
     <h1>🔊 Talkie-Walkie</h1>
-    <p style="color:#4a5568;">Ouvre cette page dans <strong>deux onglets</strong> pour tester.</p>
 
-    <!-- Mon ID -->
-    <div class="mon-id" id="monId">🔴 Connexion en cours...</div>
+    <div class="id-box" id="myId">🔄 Connexion...</div>
+    <div class="status" id="status">⏳ En attente</div>
 
-    <!-- Status -->
-    <div class="status waiting" id="status">⏳ En attente de connexion...</div>
-
-    <!-- Appeler -->
-    <label style="font-weight:bold;">ID de l'autre utilisateur :</label>
-    <div class="flex">
-        <input type="text" id="targetId" placeholder="Colle l'ID de l'autre onglet" />
-        <button id="btnAppel" style="flex:0.5;">📞 Appeler</button>
+    <input type="text" id="targetId" placeholder="Coller l'ID de l'autre appareil">
+    
+    <button class="btn btn-call" id="callBtn">📞 Appeler</button>
+    
+    <div class="flex-row">
+        <button class="btn btn-hangup" id="hangupBtn" disabled>❌ Raccrocher</button>
+        <button class="btn btn-mute" id="muteBtn" disabled>🔇 Muet</button>
     </div>
 
-    <!-- Contrôles -->
-    <div class="flex" style="margin-top:10px;">
-        <button id="btnRaccrocher" class="btn-danger" disabled>❌ Raccrocher</button>
-        <button id="btnMute" class="btn-success" disabled>🔇 Muet</button>
-    </div>
-
-    <!-- Logs -->
-    <div class="logs" id="logs">[Système] Prêt à démarrer...</div>
+    <div class="logs" id="logs">[System] Prêt...</div>
 </div>
 
-<!-- ===== PEERJS ===== -->
+<!-- PeerJS -->
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <script>
-    // ---- Variables ----
-    let peer;
-    let currentCall = null;      // Appel en cours
-    let localStream = null;     // Flux micro local
-    let isMuted = false;
-    let isCallActive = false;
+// ========== CONFIGURATION ==========
+// Utilise un ID FIXE pour chaque appareil
+// Choisis UN ID pour ton téléphone et UN AUTRE pour ta tablette
+// Exemple: phone1 et tablette1
+const MON_ID = 'mon-appareil-' + Math.random().toString(36).slice(2, 8);
+// Si tu veux un ID fixe, décommente la ligne ci-dessous et commente celle du dessus
+// const MON_ID = 'phone_1'; // Change pour 'tablet_1' sur l'autre appareil
 
-    // ---- Éléments DOM ----
-    const monIdEl = document.getElementById('monId');
-    const statusEl = document.getElementById('status');
-    const targetIdInput = document.getElementById('targetId');
-    const btnAppel = document.getElementById('btnAppel');
-    const btnRaccrocher = document.getElementById('btnRaccrocher');
-    const btnMute = document.getElementById('btnMute');
-    const logsEl = document.getElementById('logs');
+// ========== ÉTAT ==========
+let peer = null;
+let currentCall = null;
+let localStream = null;
+let isMuted = false;
+let isConnected = false;
 
-    // ---- Fonction pour ajouter un log ----
-    function log(msg) {
-        const time = new Date().toLocaleTimeString();
-        logsEl.innerHTML += `\n[${time}] ${msg}`;
-        logsEl.scrollTop = logsEl.scrollHeight;
-    }
+// ========== DOM ==========
+const myIdEl = document.getElementById('myId');
+const statusEl = document.getElementById('status');
+const targetIdInput = document.getElementById('targetId');
+const callBtn = document.getElementById('callBtn');
+const hangupBtn = document.getElementById('hangupBtn');
+const muteBtn = document.getElementById('muteBtn');
+const logsEl = document.getElementById('logs');
 
-    // ---- Fonction pour changer le status ----
-    function setStatus(text, type = 'waiting') {
-        statusEl.textContent = text;
-        statusEl.className = 'status ' + type;
-    }
+// ========== LOG ==========
+function log(msg) {
+    const time = new Date().toLocaleTimeString();
+    logsEl.innerHTML += `\n[${time}] ${msg}`;
+    logsEl.scrollTop = logsEl.scrollHeight;
+}
 
-    // ---- 1. Initialiser PeerJS (SANS CLÉ, serveur cloud par défaut) ----
-    peer = new Peer();
+function setStatus(text, type = '') {
+    statusEl.textContent = text;
+    statusEl.className = 'status ' + type;
+}
 
-    // ---- 2. Quand l'ID est généré ----
-    peer.on('open', (id) => {
-        monIdEl.textContent = '🟢 Mon ID : ' + id;
-        log('✅ Connecté avec l\'ID : ' + id);
-        setStatus('🔗 Connecté, en attente d\'appel', 'waiting');
+// ========== INIT PEER ==========
+function initPeer() {
+    peer = new Peer(MON_ID, {
+        config: {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        }
     });
 
-    // ---- 3. Quand on reçoit un appel ----
+    peer.on('open', (id) => {
+        myIdEl.textContent = '🟢 Mon ID : ' + id;
+        log('✅ Connecté avec ID: ' + id);
+        setStatus('🔗 Connecté - En attente d\'appel', 'on');
+        isConnected = true;
+        callBtn.disabled = false;
+    });
+
+    // ===== RECEVOIR UN APPEL =====
     peer.on('call', (call) => {
         log('📞 Appel entrant de ' + call.peer);
+        setStatus('📞 Appel entrant...', 'calling');
 
-        // Demander l'accès au micro
+        // Demander le micro
         navigator.mediaDevices.getUserMedia({ audio: true, video: false })
             .then((stream) => {
                 localStream = stream;
-                // Répondre à l'appel
                 call.answer(stream);
                 startCall(call);
             })
             .catch((err) => {
-                log('❌ Erreur micro : ' + err.message);
-                setStatus('❌ Impossible d\'accéder au micro', 'disconnected');
+                log('❌ Erreur micro: ' + err.message);
+                setStatus('❌ Micro refusé', 'off');
+                call.close();
             });
     });
 
-    // ---- 4. Lancer un appel (bouton) ----
-    btnAppel.addEventListener('click', () => {
-        const targetId = targetIdInput.value.trim();
-        if (!targetId) {
-            log('⚠️ Entrez un ID destinataire');
-            return;
-        }
-        if (targetId === peer.id) {
-            log('⚠️ Vous ne pouvez pas vous appeler vous-même');
-            return;
-        }
-
-        log('📞 Appel vers ' + targetId + '...');
-        setStatus('📞 Appel en cours...', 'waiting');
-
-        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-            .then((stream) => {
-                localStream = stream;
-                const call = peer.call(targetId, stream);
-                startCall(call);
-            })
-            .catch((err) => {
-                log('❌ Erreur micro : ' + err.message);
-                setStatus('❌ Impossible d\'accéder au micro', 'disconnected');
-            });
-    });
-
-    // ---- 5. Gérer un appel actif ----
-    function startCall(call) {
-        currentCall = call;
-        isCallActive = true;
-
-        // Activer/Désactiver les boutons
-        btnAppel.disabled = true;
-        btnRaccrocher.disabled = false;
-        btnMute.disabled = false;
-        setStatus('🔊 En communication', 'connected');
-        log('🔊 Appel établi avec ' + call.peer);
-
-        // Écouter le flux audio distant
-        call.on('stream', (remoteStream) => {
-            const audio = new Audio();
-            audio.srcObject = remoteStream;
-            audio.play().catch(e => log('⚠️ Auto-play bloqué, cliquez sur la page'));
-            log('🎧 Flux audio distant reçu');
-        });
-
-        // Si l'autre raccroche
-        call.on('close', () => {
-            endCall('🔚 L\'autre utilisateur a raccroché');
-        });
-
-        // Gestion d'erreur
-        call.on('error', (err) => {
-            log('❌ Erreur appel : ' + err.message);
-            endCall('❌ Erreur de communication');
-        });
-    }
-
-    // ---- 6. Raccrocher ----
-    btnRaccrocher.addEventListener('click', () => {
-        endCall('🔚 Vous avez raccroché');
-    });
-
-    function endCall(reason) {
-        if (currentCall) {
-            currentCall.close();
-            currentCall = null;
-        }
-        if (localStream) {
-            localStream.getTracks().forEach(track => track.stop());
-            localStream = null;
-        }
-        isCallActive = false;
-        isMuted = false;
-        btnAppel.disabled = false;
-        btnRaccrocher.disabled = true;
-        btnMute.disabled = true;
-        btnMute.textContent = '🔇 Muet';
-        setStatus('🔗 Déconnecté', 'disconnected');
-        log(reason);
-    }
-
-    // ---- 7. Muet / Démuet ----
-    btnMute.addEventListener('click', () => {
-        if (!localStream) return;
-        isMuted = !isMuted;
-        localStream.getAudioTracks().forEach(track => {
-            track.enabled = !isMuted;
-        });
-        btnMute.textContent = isMuted ? '🔊 Démuet' : '🔇 Muet';
-        log(isMuted ? '🔇 Micro coupé' : '🔊 Micro rétabli');
-    });
-
-    // ---- 8. Gérer les erreurs de PeerJS ----
     peer.on('error', (err) => {
-        log('❌ Erreur PeerJS : ' + err.message);
+        log('❌ Erreur: ' + err.message);
         if (err.message.includes('ID')) {
-            setStatus('❌ ID déjà pris, rafraîchissez', 'disconnected');
+            setStatus('❌ ID déjà pris ! Change l\'ID', 'off');
         }
     });
 
-    // ---- 9. Quand l'onglet se ferme ----
-    window.addEventListener('beforeunload', () => {
-        if (currentCall) currentCall.close();
-        if (localStream) localStream.getTracks().forEach(track => track.stop());
-        peer.destroy();
+    peer.on('disconnected', () => {
+        log('⚠️ Déconnecté du serveur');
+        setStatus('⚠️ Déconnecté', 'off');
+        isConnected = false;
+        callBtn.disabled = true;
+    });
+}
+
+// ========== DÉMARRER UN APPEL ==========
+function startCall(call) {
+    currentCall = call;
+    callBtn.disabled = true;
+    hangupBtn.disabled = false;
+    muteBtn.disabled = false;
+    setStatus('🔊 En communication avec ' + call.peer, 'on');
+    log('🔊 Appel établi !');
+
+    // Écouter le flux audio distant
+    call.on('stream', (remoteStream) => {
+        const audio = new Audio();
+        audio.srcObject = remoteStream;
+        audio.play().catch(e => {
+            log('⚠️ Clique sur la page pour activer le son');
+        });
+        log('🎧 Audio distant reçu');
     });
 
-    log('🚀 Application prête !');
+    call.on('close', () => {
+        endCall('🔚 L\'autre a raccroché');
+    });
+
+    call.on('error', (err) => {
+        log('❌ Erreur appel: ' + err.message);
+        endCall('❌ Erreur');
+    });
+}
+
+// ========== FIN APPEL ==========
+function endCall(reason) {
+    if (currentCall) {
+        currentCall.close();
+        currentCall = null;
+    }
+    if (localStream) {
+        localStream.getTracks().forEach(t => t.stop());
+        localStream = null;
+    }
+    isMuted = false;
+    isConnected = true;
+    callBtn.disabled = false;
+    hangupBtn.disabled = true;
+    muteBtn.disabled = true;
+    muteBtn.textContent = '🔇 Muet';
+    muteBtn.classList.remove('active');
+    setStatus('🔗 Déconnecté - En attente', 'on');
+    log(reason);
+}
+
+// ========== BOUTONS ==========
+
+// Appeler
+callBtn.addEventListener('click', () => {
+    const targetId = targetIdInput.value.trim();
+    if (!targetId) { log('⚠️ Entrez un ID'); return; }
+    if (targetId === MON_ID) { log('⚠️ Vous-même !'); return; }
+
+    log('📞 Appel vers ' + targetId + '...');
+    setStatus('📞 Appel en cours...', 'calling');
+    callBtn.disabled = true;
+
+    navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+        .then((stream) => {
+            localStream = stream;
+            const call = peer.call(targetId, stream);
+            startCall(call);
+        })
+        .catch((err) => {
+            log('❌ Erreur micro: ' + err.message);
+            setStatus('❌ Micro bloqué', 'off');
+            callBtn.disabled = false;
+        });
+});
+
+// Raccrocher
+hangupBtn.addEventListener('click', () => {
+    endCall('🔚 Vous avez raccroché');
+});
+
+// Muet
+muteBtn.addEventListener('click', () => {
+    if (!localStream) return;
+    isMuted = !isMuted;
+    localStream.getAudioTracks().forEach(track => {
+        track.enabled = !isMuted;
+    });
+    muteBtn.textContent = isMuted ? '🔊 Démuet' : '🔇 Muet';
+    muteBtn.classList.toggle('active', isMuted);
+    log(isMuted ? '🔇 Muet activé' : '🔊 Muet désactivé');
+});
+
+// ========== LANCER ==========
+initPeer();
+
+// Nettoyer à la fermeture
+window.addEventListener('beforeunload', () => {
+    if (currentCall) currentCall.close();
+    if (localStream) localStream.getTracks().forEach(t => t.stop());
+    if (peer) peer.destroy();
+});
+
+log('🚀 App prête');
 </script>
 </body>
 </html>
