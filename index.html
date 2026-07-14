@@ -442,6 +442,41 @@
             height: 14px;
         }
 
+        /* ═══ STYLE POUR LES MARQUEURS D'ALERTE ═══ */
+        .alert-marker {
+            background: none;
+            border: none;
+            text-align: center;
+            font-size: 28px;
+            line-height: 28px;
+            animation: alertPulse 1s infinite;
+            filter: drop-shadow(0 0 8px rgba(231, 76, 60, 0.8));
+        }
+        .alert-marker .label {
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
+            color: #e74c3c;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-top: -4px;
+            white-space: nowrap;
+            animation: none;
+        }
+        @keyframes alertPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .alert-circle {
+            animation: circlePulse 1.5s infinite;
+        }
+        @keyframes circlePulse {
+            0% { opacity: 0.8; r: 50; }
+            100% { opacity: 0; r: 200; }
+        }
+
         @media (max-width: 600px) {
             .header .logo {
                 font-size: 1rem;
@@ -512,7 +547,7 @@
 
     <!-- ===== LOCALISATION ===== -->
     <div class="loc-bar">
-        <div>📍 <span class="city">Majunga · Mahabibo</span></div>
+        <div>📍 <span class="city" id="currentCity">Majunga · Mahabibo</span></div>
         <div class="stats">
             <span>👥 <span class="num" id="groupCount">3</span> groupes</span>
             <span>🟢 <span class="num" id="memberCount">15</span> membres</span>
@@ -604,7 +639,6 @@
             // =========================================================
             // 1. FIREBASE - Configuration GRATUITE
             // =========================================================
-            // 🔥 REMPLACE avec ta config Firebase (gratuit)
             const firebaseConfig = {
                 apiKey: "AIzaSyDemoKey123456789",
                 authDomain: "ton-projet.firebaseapp.com",
@@ -618,6 +652,8 @@
             let useFirebase = false;
             let db = null;
             let currentGroup = 'A';
+            let userLat = null;
+            let userLng = null;
 
             try {
                 firebase.initializeApp(firebaseConfig);
@@ -644,6 +680,7 @@
             }).addTo(map);
 
             const markers = {};
+            const alertMarkers = [];
             const userMarkers = {};
 
             // Marqueurs des groupes
@@ -678,6 +715,9 @@
             // 3. GÉOLOCALISATION
             // =========================================================
             function updateUserPosition(lat, lng) {
+                userLat = lat;
+                userLng = lng;
+
                 // Supprimer l'ancien marqueur utilisateur
                 if (window._userMarker) {
                     map.removeLayer(window._userMarker);
@@ -694,6 +734,9 @@
                 }).addTo(map);
                 window._userMarker.bindPopup(`📍 Vous êtes ici<br>Groupe ${currentGroup}`);
                 map.setView([lat, lng], 16);
+
+                // Mettre à jour la ville approximative
+                document.getElementById('currentCity').textContent = `Majunga · ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 
                 // Envoyer la position à Firebase
                 if (useFirebase && db) {
@@ -792,6 +835,14 @@
                         addTwMessage(data.who, data.text, data.cls);
                     }
                 });
+
+                // Écouter les alertes Firebase
+                db.ref('alerts').on('child_added', function(snapshot) {
+                    const data = snapshot.val();
+                    if (data.userId !== getUserId() && data.lat && data.lng) {
+                        addAlertMarkerOnMap(data.lat, data.lng, data.group || '?', data.userId);
+                    }
+                });
             }
 
             // Simuler les autres groupes
@@ -807,7 +858,128 @@
             }
 
             // =========================================================
-            // 7. AUDIO avec PeerJS (VRAI talkie-walkie)
+            // 7. ALERTE SUR LA CARTE (NOUVEAU)
+            // =========================================================
+            function addAlertMarkerOnMap(lat, lng, group, userId) {
+                // Marqueur d'alerte avec icône personnalisée
+                const alertIcon = L.divIcon({
+                    className: 'alert-marker',
+                    html: '🚨<span class="label">ALERTE</span>',
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 40]
+                });
+
+                const marker = L.marker([lat, lng], {
+                    icon: alertIcon
+                }).addTo(map);
+
+                const popupContent = `
+                        <b>🚨 ALERTE KIDNAPPING</b><br>
+                        📍 Position: ${lat.toFixed(5)}, ${lng.toFixed(5)}<br>
+                        👥 Groupe: ${group || '?'}<br>
+                        🕐 Signalée à: ${new Date().toLocaleTimeString()}<br>
+                        <span style="color:#e74c3c;font-weight:700;">⚠️ INTERVENTION EN COURS</span>
+                    `;
+
+                marker.bindPopup(popupContent).openPopup();
+
+                // Ajouter un cercle pulsant
+                const circle = L.circle([lat, lng], {
+                    radius: 50,
+                    color: '#e74c3c',
+                    fillColor: '#e74c3c',
+                    fillOpacity: 0.3,
+                    weight: 2,
+                    className: 'alert-circle'
+                }).addTo(map);
+
+                // Animation du cercle : il grandit et disparaît
+                let radius = 50;
+                const growInterval = setInterval(() => {
+                    radius += 15;
+                    circle.setRadius(radius);
+                    circle.setStyle({
+                        fillOpacity: Math.max(0, 0.3 - (radius / 500)),
+                        weight: Math.max(0.5, 2 - (radius / 200))
+                    });
+                    if (radius > 500) {
+                        clearInterval(growInterval);
+                        map.removeLayer(circle);
+                    }
+                }, 100);
+
+                // Zoomer sur l'alerte
+                map.setView([lat, lng], 15);
+
+                // Ajouter aux logs
+                alertMarkers.push({ marker, circle, interval: growInterval });
+                addTwMessage('🚨 ALERTE', `📍 Alerte signalée à ${lat.toFixed(4)}, ${lng.toFixed(4)} (Groupe ${group || '?'})`, 'alert');
+                showToast(`🚨 ALERTE positionnée sur la carte !`, 'error');
+
+                return marker;
+            }
+
+            // =========================================================
+            // 8. ALERTE KIDNAPPING (AVEC POSITION GPS)
+            // =========================================================
+            const btnAlert = document.getElementById('btnAlert');
+            let alertActive = false;
+
+            btnAlert.addEventListener('click', function() {
+                if (alertActive) {
+                    showToast('⚠️ Alerte déjà en cours', 'error');
+                    return;
+                }
+
+                // Vérifier si on a une position GPS
+                if (!userLat || !userLng) {
+                    showToast('⚠️ Position GPS non disponible. Activez la géolocalisation.', 'error');
+                    return;
+                }
+
+                alertActive = true;
+                this.disabled = true;
+                this.innerHTML = '🚨 ALERTE EN COURS... <span class="sub">⏳ Intervention</span>';
+
+                // Ajouter le marqueur d'alerte sur la carte à la position GPS de l'utilisateur
+                addAlertMarkerOnMap(userLat, userLng, currentGroup, getUserId());
+
+                // Message dans le chat
+                addTwMessage('🚨 ALERTE', `🔴 KIDNAPPING · Secteur Mahabibo (Groupe ${currentGroup})`, 'alert');
+                showToast('🚨 ALERTE KIDNAPPING ! Position envoyée à tous', 'error');
+
+                // Réponses simulées des autres groupes
+                setTimeout(() => addTwMessage('Groupe B', '✅ Reçu ! Intervention en cours', 'g2'), 1500);
+                setTimeout(() => addTwMessage('Groupe C', '✅ On se rapproche !', 'g3'), 2500);
+                setTimeout(() => addTwMessage('🔄 Système', '📡 Gendarmes & Police notifiés (17 · 112)', 'system'), 3500);
+
+                // Envoyer à Firebase
+                if (useFirebase && db) {
+                    db.ref('alerts').push({
+                        type: 'kidnapping',
+                        lat: userLat,
+                        lng: userLng,
+                        location: 'Mahabibo',
+                        group: currentGroup,
+                        userId: getUserId(),
+                        timestamp: Date.now(),
+                        active: true
+                    });
+                }
+
+                // Fin de l'alerte après 20 secondes
+                setTimeout(() => {
+                    alertActive = false;
+                    btnAlert.disabled = false;
+                    btnAlert.innerHTML =
+                        '🚨 ALERTE KIDNAPPING <span class="sub">⚠️ Tous les groupes & forces de l\'ordre</span>';
+                    showToast('✅ Alerte terminée', 'success');
+                    addTwMessage('🔄 Système', '✅ Fin d\'alerte · Restez vigilants', 'system');
+                }, 20000);
+            });
+
+            // =========================================================
+            // 9. AUDIO avec PeerJS (VRAI talkie-walkie)
             // =========================================================
             let peer = null;
             let currentCall = null;
@@ -1067,51 +1239,7 @@
             });
 
             // =========================================================
-            // 8. ALERTE KIDNAPPING
-            // =========================================================
-            const btnAlert = document.getElementById('btnAlert');
-            let alertActive = false;
-
-            btnAlert.addEventListener('click', function() {
-                if (alertActive) {
-                    showToast('⚠️ Alerte déjà en cours', 'error');
-                    return;
-                }
-                alertActive = true;
-                this.disabled = true;
-                this.innerHTML = '🚨 ALERTE EN COURS... <span class="sub">⏳ Intervention</span>';
-
-                showToast('🚨 ALERTE KIDNAPPING ! Tous les groupes prévenus', 'error');
-                addTwMessage('🚨 ALERTE', `🔴 KIDNAPPING · Secteur Mahabibo (Groupe ${currentGroup})`, 'alert');
-
-                setTimeout(() => addTwMessage('Groupe B', '✅ Reçu ! Intervention en cours', 'g2'), 1500);
-                setTimeout(() => addTwMessage('Groupe C', '✅ On se rapproche !', 'g3'), 2500);
-                setTimeout(() => addTwMessage('🔄 Système', '📡 Gendarmes & Police notifiés (17 · 112)', 'system'),
-                    3500);
-
-                if (useFirebase && db) {
-                    db.ref('alerts').push({
-                        type: 'kidnapping',
-                        location: 'Mahabibo',
-                        group: currentGroup,
-                        userId: getUserId(),
-                        timestamp: Date.now(),
-                        active: true
-                    });
-                }
-
-                setTimeout(() => {
-                    alertActive = false;
-                    btnAlert.disabled = false;
-                    btnAlert.innerHTML =
-                        '🚨 ALERTE KIDNAPPING <span class="sub">⚠️ Tous les groupes & forces de l\'ordre</span>';
-                    showToast('✅ Alerte terminée', 'success');
-                    addTwMessage('🔄 Système', '✅ Fin d\'alerte · Restez vigilants', 'system');
-                }, 20000);
-            });
-
-            // =========================================================
-            // 9. ACTIONS DES GROUPES
+            // 10. ACTIONS DES GROUPES
             // =========================================================
             window.sendPosition = function(group) {
                 showToast(`📍 Position du Groupe ${group} sur la carte`, 'info');
@@ -1134,7 +1262,7 @@
             };
 
             // =========================================================
-            // 10. SÉLECTEUR DE GROUPE
+            // 11. SÉLECTEUR DE GROUPE
             // =========================================================
             document.getElementById('groupSelector').addEventListener('change', function() {
                 currentGroup = this.value;
@@ -1160,7 +1288,7 @@
             });
 
             // =========================================================
-            // 11. MESSAGES DE DÉMARRAGE
+            // 12. MESSAGES DE DÉMARRAGE
             // =========================================================
             setTimeout(() => {
                 addTwMessage('🔄 Système', '🔰 FOKON\'ALERT prêt · 3 groupes connectés', 'system');
@@ -1173,12 +1301,12 @@
             }, 2500);
 
             // =========================================================
-            // 12. INIT PEERJS
+            // 13. INIT PEERJS
             // =========================================================
             initPeerJS();
 
             // =========================================================
-            // 13. RACCOURCIS CLAVIER
+            // 14. RACCOURCIS CLAVIER
             // =========================================================
             document.addEventListener('keydown', function(e) {
                 if (e.altKey && e.key === 'a') { e.preventDefault();
@@ -1196,6 +1324,7 @@
             console.log('👤 ID:', getUserId());
             console.log('🎤 ID PeerJS:', peerId);
             console.log('💡 Raccourcis: Alt+A (alerte) Alt+L (écouter) Alt+P (parler) Alt+S (stop)');
+            console.log('📍 L\'alerte sera positionnée à votre position GPS exacte !');
 
         })();
     </script>
