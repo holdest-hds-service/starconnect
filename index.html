@@ -1,320 +1,1204 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Talkie-Walkie</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>FOKON'ALERT — Audio + Multi-appareils</title>
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
+    </script>
+
+    <!-- ═══ PEERJS POUR L'AUDIO ═══ -->
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js">
+    </script>
+
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
-            font-family: Arial, sans-serif;
-            background: #0b1120;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0b1725;
+            color: #e8edf2;
             min-height: 100vh;
-            padding: 16px;
+            padding-bottom: 80px;
         }
-        .container {
-            background: #1e293b;
-            padding: 30px;
-            border-radius: 24px;
-            max-width: 450px;
-            width: 100%;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            color: white;
+        .header {
+            background: linear-gradient(135deg, #0a1e32, #143a57);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f5c842;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            flex-wrap: wrap;
+            gap: 8px;
         }
-        h1 { font-size: 24px; text-align: center; margin-bottom: 20px; }
-        .id-box {
-            background: #0f172a;
-            padding: 14px;
-            border-radius: 12px;
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            color: #38bdf8;
-            word-break: break-all;
-            margin-bottom: 16px;
-            border: 1px solid #334155;
+        .header .logo {
+            font-size: 1.2rem;
+            font-weight: 800;
         }
-        .status {
-            padding: 12px;
-            border-radius: 12px;
-            text-align: center;
-            font-weight: bold;
-            margin-bottom: 16px;
-            background: #334155;
-            color: #94a3b8;
+        .header .logo span {
+            color: #f5c842;
         }
-        .status.on { background: #065f46; color: #6ee7b7; }
-        .status.off { background: #7f1d1d; color: #fca5a5; }
-        .status.calling { background: #713f12; color: #fcd34d; }
-        input {
-            width: 100%;
-            padding: 14px;
-            border-radius: 12px;
+        .header .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.7rem;
+        }
+        .header .status .dot {
+            width: 8px;
+            height: 8px;
+            background: #5dffa0;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
+        }
+        .header .user-badge {
+            background: #1a3a55;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header .user-badge select {
+            background: transparent;
             border: none;
-            background: #0f172a;
-            color: white;
-            font-size: 16px;
-            margin-bottom: 10px;
-            border: 1px solid #334155;
-        }
-        input::placeholder { color: #64748b; }
-        .btn {
-            padding: 16px;
-            border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: bold;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.7rem;
             cursor: pointer;
+            font-family: inherit;
+        }
+        .header .user-badge select option {
+            background: #0b1725;
+            color: #fff;
+        }
+
+        .loc-bar {
+            background: #0f2238;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            font-size: 0.8rem;
+            border-bottom: 1px solid #1a3a55;
+        }
+        .loc-bar .city {
+            color: #f5c842;
+            font-weight: 700;
+        }
+        .loc-bar .stats {
+            display: flex;
+            gap: 16px;
+            font-size: 0.7rem;
+            color: #8ab4d6;
+        }
+        .loc-bar .stats .num {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .map-wrapper {
+            margin: 12px 16px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid #1a3a55;
+        }
+        #map {
+            height: 320px;
             width: 100%;
-            margin-bottom: 10px;
-            transition: 0.2s;
+            min-height: 220px;
         }
-        .btn:active { transform: scale(0.96); }
-        .btn-call { background: #2563eb; color: white; }
-        .btn-call:disabled { background: #475569; cursor: not-allowed; }
-        .btn-hangup { background: #dc2626; color: white; }
-        .btn-hangup:disabled { background: #475569; cursor: not-allowed; }
-        .btn-mute { background: #6366f1; color: white; }
-        .btn-mute:disabled { background: #475569; cursor: not-allowed; }
-        .btn-mute.active { background: #eab308; color: #0f172a; }
-        .logs {
-            background: #0f172a;
-            padding: 12px;
-            border-radius: 12px;
-            height: 80px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 12px;
-            color: #94a3b8;
-            margin-top: 12px;
-            border: 1px solid #334155;
+
+        .section-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 16px 20px 8px;
+            color: #b6cdff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .flex-row {
+
+        .group-list {
             display: flex;
             gap: 10px;
+            padding: 0 16px 10px;
+            overflow-x: auto;
         }
-        .flex-row .btn { flex: 1; }
+        .group-card {
+            background: #112b42;
+            border-radius: 14px;
+            padding: 14px 16px;
+            min-width: 140px;
+            flex-shrink: 0;
+            border-left: 4px solid #f5c842;
+        }
+        .group-card .g-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .group-card .g-status {
+            font-size: 0.65rem;
+            color: #8ab4d6;
+            margin-top: 2px;
+        }
+        .group-card .g-members {
+            font-size: 0.6rem;
+            color: #5a7f9e;
+            margin-top: 4px;
+        }
+        .group-card .g-actions {
+            margin-top: 8px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .group-card .g-actions button {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #b6cdff;
+            padding: 3px 12px;
+            border-radius: 30px;
+            font-size: 0.55rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+        .group-card .g-actions button:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+        .group-card .g-actions button.primary {
+            background: #f5c842;
+            color: #0b1725;
+            border-color: #f5c842;
+        }
+        .group-card .g-actions button.primary:hover {
+            background: #ffd966;
+        }
+
+        .alert-zone {
+            padding: 10px 16px;
+        }
+        .btn-alert {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #b03a2e, #e74c3c);
+            border: none;
+            border-radius: 60px;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            box-shadow: 0 5px 0 #78281f;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.08s;
+        }
+        .btn-alert:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #78281f;
+        }
+        .btn-alert:disabled {
+            opacity: 0.5;
+            transform: translateY(3px);
+            pointer-events: none;
+        }
+        .btn-alert .sub {
+            display: block;
+            font-size: 0.5rem;
+            font-weight: 400;
+            opacity: 0.8;
+        }
+
+        .tw-section {
+            background: #0d2236;
+            margin: 6px 16px 16px;
+            border-radius: 16px;
+            padding: 14px 16px;
+            border: 1px solid #1a3a55;
+        }
+        .tw-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .tw-header .tw-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tw-header .tw-title .audio-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4a6a88;
+            transition: background 0.3s;
+        }
+        .tw-header .tw-title .audio-indicator.active {
+            background: #2ecc71;
+            animation: pulse 1s infinite;
+        }
+        .tw-header .tw-title .audio-indicator.recording {
+            background: #e74c3c;
+            animation: pulse 0.5s infinite;
+        }
+        .tw-header .tw-channel {
+            background: #1a3a55;
+            padding: 3px 14px;
+            border-radius: 30px;
+            font-size: 0.6rem;
+            color: #7fb6e6;
+        }
+
+        .tw-messages {
+            background: #071725;
+            border-radius: 12px;
+            padding: 10px 14px;
+            max-height: 120px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        .tw-msg {
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .tw-msg .who {
+            font-weight: 700;
+            color: #f5c842;
+        }
+        .tw-msg .who.g2 {
+            color: #2ecc71;
+        }
+        .tw-msg .who.g3 {
+            color: #5dade2;
+        }
+        .tw-msg .who.system {
+            color: #e67e22;
+        }
+        .tw-msg .who.alert {
+            color: #e74c3c;
+        }
+        .tw-msg .time {
+            color: #4a6a88;
+            font-size: 0.55rem;
+            margin-left: 8px;
+        }
+
+        .tw-controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .tw-controls button {
+            flex: 1;
+            min-width: 60px;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            background: #1a3a55;
+            color: #cde0f5;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+        .tw-controls button:active {
+            transform: scale(0.96);
+        }
+        .tw-controls button.record {
+            background: #c0392b;
+            color: #fff;
+        }
+        .tw-controls button.record.listening {
+            background: #1f8b4c;
+        }
+        .tw-controls button.record.recording {
+            background: #e74c3c;
+            animation: pulse 0.8s infinite;
+        }
+        .tw-controls button.secondary {
+            background: transparent;
+            border: 1px solid #1a3a55;
+        }
+        .tw-controls button:disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .tw-status {
+            font-size: 0.55rem;
+            color: #4a6a88;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .toast {
+            position: fixed;
+            top: 75px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a2a3e;
+            padding: 12px 24px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            display: none;
+            max-width: 92%;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .toast.show {
+            display: block;
+            animation: slideDown 0.4s ease;
+        }
+        .toast.error {
+            border-color: #e74c3c;
+        }
+        .toast.success {
+            border-color: #2ecc71;
+        }
+        .toast.info {
+            border-color: #3498db;
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .audio-wave {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            height: 20px;
+            margin: 0 4px;
+        }
+        .audio-wave span {
+            display: inline-block;
+            width: 3px;
+            height: 8px;
+            background: #4a6a88;
+            border-radius: 3px;
+            transition: height 0.1s;
+        }
+        .audio-wave span.active {
+            background: #2ecc71;
+        }
+        .audio-wave span:nth-child(1) {
+            height: 6px;
+        }
+        .audio-wave span:nth-child(2) {
+            height: 12px;
+        }
+        .audio-wave span:nth-child(3) {
+            height: 18px;
+        }
+        .audio-wave span:nth-child(4) {
+            height: 10px;
+        }
+        .audio-wave span:nth-child(5) {
+            height: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .header .logo {
+                font-size: 1rem;
+            }
+            .header .user-badge {
+                font-size: 0.6rem;
+                padding: 3px 10px;
+            }
+            .loc-bar {
+                font-size: 0.7rem;
+                padding: 6px 14px;
+            }
+            .loc-bar .stats {
+                font-size: 0.6rem;
+                gap: 10px;
+            }
+            #map {
+                height: 250px;
+            }
+            .group-card {
+                min-width: 110px;
+                padding: 10px 12px;
+            }
+            .group-card .g-name {
+                font-size: 0.75rem;
+            }
+            .btn-alert {
+                font-size: 0.9rem;
+                padding: 14px;
+            }
+            .tw-section {
+                padding: 10px 12px;
+            }
+            .tw-messages {
+                font-size: 0.7rem;
+                max-height: 100px;
+            }
+            .tw-controls button {
+                font-size: 0.65rem;
+                padding: 8px 10px;
+                min-width: 50px;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>🔊 Talkie-Walkie</h1>
+    <!-- ===== TOAST ===== -->
+    <div class="toast" id="toast"></div>
 
-    <div class="id-box" id="myId">🔄 Connexion...</div>
-    <div class="status" id="status">⏳ En attente</div>
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+        <div class="logo">🛡️ FOKON'<span>ALERT</span></div>
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <div class="status">
+                <span class="dot"></span>
+                <span id="connectionStatus">Connecté</span>
+            </div>
+            <div class="user-badge">
+                👤 <select id="groupSelector">
+                    <option value="A">Groupe A</option>
+                    <option value="B">Groupe B</option>
+                    <option value="C">Groupe C</option>
+                </select>
+            </div>
+        </div>
+    </header>
 
-    <input type="text" id="targetId" placeholder="Coller l'ID de l'autre appareil">
-    
-    <button class="btn btn-call" id="callBtn">📞 Appeler</button>
-    
-    <div class="flex-row">
-        <button class="btn btn-hangup" id="hangupBtn" disabled>❌ Raccrocher</button>
-        <button class="btn btn-mute" id="muteBtn" disabled>🔇 Muet</button>
+    <!-- ===== LOCALISATION ===== -->
+    <div class="loc-bar">
+        <div>📍 <span class="city">Majunga · Mahabibo</span></div>
+        <div class="stats">
+            <span>👥 <span class="num" id="groupCount">3</span> groupes</span>
+            <span>🟢 <span class="num" id="memberCount">15</span> membres</span>
+            <span>⏱️ <span class="num" id="patrolCount">4</span> rondes</span>
+        </div>
     </div>
 
-    <div class="logs" id="logs">[System] Prêt...</div>
-</div>
+    <!-- ===== CARTE ===== -->
+    <div class="map-wrapper">
+        <div id="map"></div>
+    </div>
 
-<!-- PeerJS -->
-<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <!-- ===== GROUPES ===== -->
+    <div class="section-title">👥 Groupes de vigilance</div>
+    <div class="group-list" id="groupList">
+        <!-- Groupe A -->
+        <div class="group-card" style="border-left-color:#e74c3c;" id="groupACard">
+            <div class="g-name">🔴 Groupe A <span style="font-size:0.5rem; background:#e74c3c30; padding:0 8px; border-radius:20px;" id="groupABadge">vous</span></div>
+            <div class="g-status" id="groupAStatus">En patrouille · Nord</div>
+            <div class="g-members" id="groupAMembers">6 membres</div>
+            <div class="g-actions">
+                <button class="primary" onclick="sendPosition('A')">📍 Position</button>
+                <button onclick="callGroup('A')">📡 Appel</button>
+            </div>
+        </div>
+        <!-- Groupe B -->
+        <div class="group-card" style="border-left-color:#2ecc71;" id="groupBCard">
+            <div class="g-name">🟢 Groupe B</div>
+            <div class="g-status" id="groupBStatus">Rondes actives · Sud</div>
+            <div class="g-members" id="groupBMembers">5 membres</div>
+            <div class="g-actions">
+                <button onclick="sendPosition('B')">📍 Voir</button>
+                <button onclick="callGroup('B')">📡 Appel</button>
+            </div>
+        </div>
+        <!-- Groupe C -->
+        <div class="group-card" style="border-left-color:#3498db;" id="groupCCard">
+            <div class="g-name">🔵 Groupe C</div>
+            <div class="g-status" id="groupCStatus">En intervention · Est</div>
+            <div class="g-members" id="groupCMembers">4 membres</div>
+            <div class="g-actions">
+                <button onclick="sendPosition('C')">📍 Voir</button>
+                <button onclick="callGroup('C')">📡 Appel</button>
+            </div>
+        </div>
+    </div>
 
-<script>
-// ========== CONFIGURATION ==========
-// Utilise un ID FIXE pour chaque appareil
-// Choisis UN ID pour ton téléphone et UN AUTRE pour ta tablette
-// Exemple: phone1 et tablette1
-const MON_ID = 'mon-appareil-' + Math.random().toString(36).slice(2, 8);
-// Si tu veux un ID fixe, décommente la ligne ci-dessous et commente celle du dessus
-// const MON_ID = 'phone_1'; // Change pour 'tablet_1' sur l'autre appareil
+    <!-- ===== ALERTE ===== -->
+    <div class="alert-zone">
+        <button class="btn-alert" id="btnAlert">
+            🚨 ALERTE KIDNAPPING
+            <span class="sub">⚠️ Tous les groupes & forces de l'ordre</span>
+        </button>
+    </div>
 
-// ========== ÉTAT ==========
-let peer = null;
-let currentCall = null;
-let localStream = null;
-let isMuted = false;
-let isConnected = false;
+    <!-- ===== TALKIE-WALKIE ===== -->
+    <div class="tw-section">
+        <div class="tw-header">
+            <span class="tw-title">
+                🎙️ Talkie-Walkie
+                <span class="audio-wave" id="audioWave">
+                    <span></span><span></span><span></span><span></span><span></span>
+                </span>
+                <span class="audio-indicator" id="audioIndicator"></span>
+            </span>
+            <span class="tw-channel" id="twChannel">🔓 Canal général</span>
+        </div>
+        <div class="tw-messages" id="twMessages">
+            <div class="tw-msg"><span class="who system">🔄 Système</span> <span class="time">--:--</span> — Canal prêt · 3 groupes connectés</div>
+        </div>
+        <div class="tw-controls">
+            <button id="twListen" class="record listening">🎧 Écouter</button>
+            <button id="twSpeak" class="record">🎤 Parler</button>
+            <button id="twStop" class="secondary" disabled>⏹️ Arrêter</button>
+            <button id="twClear" class="secondary">🗑️ Effacer</button>
+        </div>
+        <div class="tw-status" id="twStatus">
+            ⚡ Appuyez sur "Parler" pour une transmission vocale en direct
+        </div>
+    </div>
 
-// ========== DOM ==========
-const myIdEl = document.getElementById('myId');
-const statusEl = document.getElementById('status');
-const targetIdInput = document.getElementById('targetId');
-const callBtn = document.getElementById('callBtn');
-const hangupBtn = document.getElementById('hangupBtn');
-const muteBtn = document.getElementById('muteBtn');
-const logsEl = document.getElementById('logs');
+    <!-- ============================================================ -->
+    <!-- ===== JAVASCRIPT ===== -->
+    <!-- ============================================================ -->
+    <script>
+        (function() {
+            'use strict';
 
-// ========== LOG ==========
-function log(msg) {
-    const time = new Date().toLocaleTimeString();
-    logsEl.innerHTML += `\n[${time}] ${msg}`;
-    logsEl.scrollTop = logsEl.scrollHeight;
-}
+            // =========================================================
+            // 1. FIREBASE - Configuration GRATUITE
+            // =========================================================
+            // 🔥 REMPLACE avec ta config Firebase (gratuit)
+            const firebaseConfig = {
+                apiKey: "AIzaSyDemoKey123456789",
+                authDomain: "ton-projet.firebaseapp.com",
+                databaseURL: "https://ton-projet-default-rtdb.firebaseio.com",
+                projectId: "ton-projet",
+                storageBucket: "ton-projet.appspot.com",
+                messagingSenderId: "123456789",
+                appId: "1:123456789:web:abcdef123456"
+            };
 
-function setStatus(text, type = '') {
-    statusEl.textContent = text;
-    statusEl.className = 'status ' + type;
-}
+            let useFirebase = false;
+            let db = null;
+            let currentGroup = 'A';
 
-// ========== INIT PEER ==========
-function initPeer() {
-    peer = new Peer(MON_ID, {
-        config: {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
-            ]
-        }
-    });
+            try {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                useFirebase = true;
+                console.log('🔥 Firebase connecté !');
+                document.getElementById('connectionStatus').textContent = '🔥 Connecté (cloud)';
+            } catch (e) {
+                console.warn('⚠️ Firebase non configuré, mode local');
+                document.getElementById('connectionStatus').textContent = '📡 Mode local';
+            }
 
-    peer.on('open', (id) => {
-        myIdEl.textContent = '🟢 Mon ID : ' + id;
-        log('✅ Connecté avec ID: ' + id);
-        setStatus('🔗 Connecté - En attente d\'appel', 'on');
-        isConnected = true;
-        callBtn.disabled = false;
-    });
-
-    // ===== RECEVOIR UN APPEL =====
-    peer.on('call', (call) => {
-        log('📞 Appel entrant de ' + call.peer);
-        setStatus('📞 Appel entrant...', 'calling');
-
-        // Demander le micro
-        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-            .then((stream) => {
-                localStream = stream;
-                call.answer(stream);
-                startCall(call);
-            })
-            .catch((err) => {
-                log('❌ Erreur micro: ' + err.message);
-                setStatus('❌ Micro refusé', 'off');
-                call.close();
+            // =========================================================
+            // 2. LEAFLET - CARTE
+            // =========================================================
+            const map = L.map('map', {
+                center: [-15.7167, 46.3167],
+                zoom: 15,
             });
-    });
 
-    peer.on('error', (err) => {
-        log('❌ Erreur: ' + err.message);
-        if (err.message.includes('ID')) {
-            setStatus('❌ ID déjà pris ! Change l\'ID', 'off');
-        }
-    });
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
 
-    peer.on('disconnected', () => {
-        log('⚠️ Déconnecté du serveur');
-        setStatus('⚠️ Déconnecté', 'off');
-        isConnected = false;
-        callBtn.disabled = true;
-    });
-}
+            const markers = {};
+            const userMarkers = {};
 
-// ========== DÉMARRER UN APPEL ==========
-function startCall(call) {
-    currentCall = call;
-    callBtn.disabled = true;
-    hangupBtn.disabled = false;
-    muteBtn.disabled = false;
-    setStatus('🔊 En communication avec ' + call.peer, 'on');
-    log('🔊 Appel établi !');
+            // Marqueurs des groupes
+            const groupPositions = {
+                A: [-15.7167, 46.3167],
+                B: [-15.7280, 46.3220],
+                C: [-15.7100, 46.3300]
+            };
 
-    // Écouter le flux audio distant
-    call.on('stream', (remoteStream) => {
-        const audio = new Audio();
-        audio.srcObject = remoteStream;
-        audio.play().catch(e => {
-            log('⚠️ Clique sur la page pour activer le son');
-        });
-        log('🎧 Audio distant reçu');
-    });
+            for (const [group, pos] of Object.entries(groupPositions)) {
+                const color = group === 'A' ? '#e74c3c' : group === 'B' ? '#2ecc71' : '#3498db';
+                markers[group] = L.marker(pos, {
+                    title: `Groupe ${group}`
+                }).addTo(map).bindPopup(`
+                        <b>🛡️ Groupe ${group}</b><br>
+                        ${group === 'A' ? '🔴 En patrouille' : group === 'B' ? '🟢 Rondes actives' : '🔵 En intervention'}<br>
+                        👥 ${group === 'A' ? '6' : group === 'B' ? '5' : '4'} membres
+                    `);
+            }
 
-    call.on('close', () => {
-        endCall('🔚 L\'autre a raccroché');
-    });
+            // Cercle de vigilance
+            L.circle([-15.7167, 46.3167], {
+                radius: 1200,
+                color: '#f5c842',
+                fillColor: '#f5c84220',
+                fillOpacity: 0.1,
+                weight: 1.5,
+                dashArray: '6, 8',
+            }).addTo(map).bindPopup('Zone de vigilance · Mahabibo');
 
-    call.on('error', (err) => {
-        log('❌ Erreur appel: ' + err.message);
-        endCall('❌ Erreur');
-    });
-}
+            // =========================================================
+            // 3. GÉOLOCALISATION
+            // =========================================================
+            function updateUserPosition(lat, lng) {
+                // Supprimer l'ancien marqueur utilisateur
+                if (window._userMarker) {
+                    map.removeLayer(window._userMarker);
+                }
 
-// ========== FIN APPEL ==========
-function endCall(reason) {
-    if (currentCall) {
-        currentCall.close();
-        currentCall = null;
-    }
-    if (localStream) {
-        localStream.getTracks().forEach(t => t.stop());
-        localStream = null;
-    }
-    isMuted = false;
-    isConnected = true;
-    callBtn.disabled = false;
-    hangupBtn.disabled = true;
-    muteBtn.disabled = true;
-    muteBtn.textContent = '🔇 Muet';
-    muteBtn.classList.remove('active');
-    setStatus('🔗 Déconnecté - En attente', 'on');
-    log(reason);
-}
+                // Ajouter le nouveau marqueur
+                window._userMarker = L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: 'user-marker',
+                        html: '📍',
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 30],
+                    }),
+                }).addTo(map);
+                window._userMarker.bindPopup(`📍 Vous êtes ici<br>Groupe ${currentGroup}`);
+                map.setView([lat, lng], 16);
 
-// ========== BOUTONS ==========
+                // Envoyer la position à Firebase
+                if (useFirebase && db) {
+                    db.ref('positions/' + getUserId()).set({
+                        lat: lat,
+                        lng: lng,
+                        group: currentGroup,
+                        timestamp: Date.now()
+                    });
+                }
+            }
 
-// Appeler
-callBtn.addEventListener('click', () => {
-    const targetId = targetIdInput.value.trim();
-    if (!targetId) { log('⚠️ Entrez un ID'); return; }
-    if (targetId === MON_ID) { log('⚠️ Vous-même !'); return; }
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(pos) {
+                        const lat = pos.coords.latitude;
+                        const lng = pos.coords.longitude;
+                        updateUserPosition(lat, lng);
+                        showToast('📍 Position GPS détectée', 'success');
+                    },
+                    function() {
+                        showToast('⚠️ Activez la géolocalisation', 'error');
+                    }, { enableHighAccuracy: true }
+                );
 
-    log('📞 Appel vers ' + targetId + '...');
-    setStatus('📞 Appel en cours...', 'calling');
-    callBtn.disabled = true;
+                // Suivre les mouvements
+                navigator.geolocation.watchPosition(
+                    function(pos) {
+                        updateUserPosition(pos.coords.latitude, pos.coords.longitude);
+                    },
+                    function() {},
+                    { enableHighAccuracy: true, maximumAge: 30000 }
+                );
+            }
 
-    navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-        .then((stream) => {
-            localStream = stream;
-            const call = peer.call(targetId, stream);
-            startCall(call);
-        })
-        .catch((err) => {
-            log('❌ Erreur micro: ' + err.message);
-            setStatus('❌ Micro bloqué', 'off');
-            callBtn.disabled = false;
-        });
-});
+            // =========================================================
+            // 4. IDENTIFIANT UNIQUE
+            // =========================================================
+            function getUserId() {
+                let id = localStorage.getItem('fokon_user_id');
+                if (!id) {
+                    id = 'user_' + Math.random().toString(36).substr(2, 9);
+                    localStorage.setItem('fokon_user_id', id);
+                }
+                return id;
+            }
 
-// Raccrocher
-hangupBtn.addEventListener('click', () => {
-    endCall('🔚 Vous avez raccroché');
-});
+            // =========================================================
+            // 5. TOAST
+            // =========================================================
+            function showToast(msg, type) {
+                const t = document.getElementById('toast');
+                t.textContent = msg;
+                t.className = 'toast show ' + (type || 'info');
+                clearTimeout(t._hide);
+                t._hide = setTimeout(() => { t.className = 'toast'; }, 4000);
+            }
+            window.showToast = showToast;
 
-// Muet
-muteBtn.addEventListener('click', () => {
-    if (!localStream) return;
-    isMuted = !isMuted;
-    localStream.getAudioTracks().forEach(track => {
-        track.enabled = !isMuted;
-    });
-    muteBtn.textContent = isMuted ? '🔊 Démuet' : '🔇 Muet';
-    muteBtn.classList.toggle('active', isMuted);
-    log(isMuted ? '🔇 Muet activé' : '🔊 Muet désactivé');
-});
+            // =========================================================
+            // 6. MESSAGES (Talkie)
+            // =========================================================
+            const twMessages = document.getElementById('twMessages');
+            let listenInterval = null;
 
-// ========== LANCER ==========
-initPeer();
+            function addTwMessage(who, text, cls) {
+                const div = document.createElement('div');
+                div.className = 'tw-msg';
+                const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                div.innerHTML =
+                    `<span class="who ${cls || ''}">${who}</span> <span class="time">${time}</span> — ${text}`;
+                twMessages.appendChild(div);
+                twMessages.scrollTop = twMessages.scrollHeight;
+                while (twMessages.children.length > 50) {
+                    twMessages.removeChild(twMessages.firstChild);
+                }
 
-// Nettoyer à la fermeture
-window.addEventListener('beforeunload', () => {
-    if (currentCall) currentCall.close();
-    if (localStream) localStream.getTracks().forEach(t => t.stop());
-    if (peer) peer.destroy();
-});
+                if (useFirebase && db) {
+                    db.ref('messages').push({
+                        who: who,
+                        text: text,
+                        cls: cls || '',
+                        timestamp: Date.now(),
+                        userId: getUserId(),
+                        group: currentGroup
+                    });
+                }
+            }
+            window.addTwMessage = addTwMessage;
 
-log('🚀 App prête');
-</script>
+            // Écouter Firebase
+            if (useFirebase && db) {
+                db.ref('messages').limitToLast(10).on('child_added', function(snapshot) {
+                    const data = snapshot.val();
+                    if (data.userId !== getUserId()) {
+                        addTwMessage(data.who, data.text, data.cls);
+                    }
+                });
+            }
+
+            // Simuler les autres groupes
+            function simulateOtherMessage() {
+                const msgs = [
+                    { who: 'Groupe B', cls: 'g2', text: 'Rondes OK · secteur sud' },
+                    { who: 'Groupe C', cls: 'g3', text: 'Présence normale · marché' },
+                    { who: 'Groupe B', cls: 'g2', text: 'On se déplace vers le nord' },
+                    { who: 'Groupe C', cls: 'g3', text: '⚠️ Véhicule suspect · on surveille' },
+                ];
+                const r = msgs[Math.floor(Math.random() * msgs.length)];
+                addTwMessage(r.who, r.text, r.cls);
+            }
+
+            // =========================================================
+            // 7. AUDIO avec PeerJS (VRAI talkie-walkie)
+            // =========================================================
+            let peer = null;
+            let currentCall = null;
+            let localStream = null;
+            let remoteStream = null;
+            let isMuted = false;
+            let isCallActive = false;
+            let peerId = '';
+            let audioInterval = null;
+
+            // Générer un ID unique pour ce navigateur
+            function getPeerId() {
+                let id = localStorage.getItem('fokon_peer_id');
+                if (!id) {
+                    id = 'tw_' + Math.random().toString(36).substr(2, 8);
+                    localStorage.setItem('fokon_peer_id', id);
+                }
+                return id;
+            }
+
+            // Initialiser PeerJS
+            function initPeerJS() {
+                peerId = getPeerId();
+
+                peer = new Peer(peerId, {
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:stun1.l.google.com:19302' }
+                        ]
+                    }
+                });
+
+                peer.on('open', (id) => {
+                    console.log('🔊 PeerJS connecté avec ID:', id);
+                    document.getElementById('twChannel').textContent = '🔓 ID: ' + id;
+                    document.getElementById('twStatus').textContent = `🎙️ Prêt · ID: ${id}`;
+                    showToast('🔊 Talkie-Walkie prêt !', 'success');
+                    addTwMessage('🔄 Système', `🎙️ Votre ID: ${id}`, 'system');
+                });
+
+                // RECEVOIR UN APPEL
+                peer.on('call', (call) => {
+                    console.log('📞 Appel entrant de:', call.peer);
+                    showToast(`📞 Appel de ${call.peer}`, 'info');
+                    addTwMessage('📞 Appel', `Appel entrant de ${call.peer}`, 'system');
+
+                    navigator.mediaDevices.getUserMedia({
+                        audio: { echoCancellation: true, noiseSuppression: true }
+                    })
+                    .then((stream) => {
+                        localStream = stream;
+                        call.answer(stream);
+                        startCall(call);
+                    })
+                    .catch((err) => {
+                        console.error('Erreur micro:', err);
+                        showToast('⚠️ Erreur micro: ' + err.message, 'error');
+                        document.getElementById('twStatus').textContent = '❌ Micro indisponible';
+                    });
+                });
+
+                peer.on('error', (err) => {
+                    console.error('Erreur PeerJS:', err);
+                    if (err.message.includes('ID')) {
+                        showToast('⚠️ ID déjà utilisé, changement...', 'error');
+                        localStorage.removeItem('fokon_peer_id');
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                });
+
+                peer.on('disconnected', () => {
+                    document.getElementById('twStatus').textContent = '⚠️ Déconnecté du serveur';
+                    showToast('⚠️ Perte de connexion', 'error');
+                });
+            }
+
+            // Démarrer un appel
+            function startCall(call) {
+                currentCall = call;
+                isCallActive = true;
+                document.getElementById('twSpeak').disabled = true;
+                document.getElementById('twListen').disabled = true;
+                document.getElementById('twStop').disabled = false;
+                document.getElementById('twStatus').textContent = '🔊 En communication';
+                document.getElementById('audioIndicator').className = 'audio-indicator active';
+                addTwMessage('🔊 Communication', 'Appel établi', 'system');
+                showToast('🔊 En communication !', 'success');
+
+                // Recevoir le flux audio distant
+                call.on('stream', (stream) => {
+                    remoteStream = stream;
+                    const audio = new Audio();
+                    audio.srcObject = stream;
+                    audio.play().catch(e => {
+                        showToast('🔊 Cliquez pour activer le son', 'info');
+                    });
+                    addTwMessage('🎧 Audio', 'Flux audio reçu', 'system');
+
+                    // Analyser le volume pour l'animation
+                    const audioCtx = new AudioContext();
+                    const source = audioCtx.createMediaStreamSource(stream);
+                    const analyser = audioCtx.createAnalyser();
+                    analyser.fftSize = 256;
+                    source.connect(analyser);
+                    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+                    let animationId = null;
+
+                    function animateAudio() {
+                        if (!isCallActive) {
+                            if (animationId) cancelAnimationFrame(animationId);
+                            return;
+                        }
+                        analyser.getByteFrequencyData(dataArray);
+                        let sum = 0;
+                        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+                        const avg = sum / dataArray.length;
+                        const level = avg / 255;
+                        updateAudioWave(Math.min(1, level * 2));
+                        animationId = requestAnimationFrame(animateAudio);
+                    }
+                    animateAudio();
+                });
+
+                call.on('close', () => {
+                    endCall('🔚 L\'autre utilisateur a raccroché');
+                });
+
+                call.on('error', (err) => {
+                    console.error('Erreur appel:', err);
+                    endCall('❌ Erreur de communication');
+                });
+            }
+
+            // Fin d'appel
+            function endCall(reason) {
+                if (currentCall) {
+                    currentCall.close();
+                    currentCall = null;
+                }
+                if (localStream) {
+                    localStream.getTracks().forEach(t => t.stop());
+                    localStream = null;
+                }
+                if (remoteStream) {
+                    remoteStream.getTracks().forEach(t => t.stop());
+                    remoteStream = null;
+                }
+                isCallActive = false;
+                isMuted = false;
+                document.getElementById('twSpeak').disabled = false;
+                document.getElementById('twListen').disabled = false;
+                document.getElementById('twStop').disabled = true;
+                document.getElementById('twStatus').textContent = '🔗 Déconnecté';
+                document.getElementById('audioIndicator').className = 'audio-indicator';
+                resetAudioWave();
+                if (reason) {
+                    addTwMessage('🔄 Système', reason, 'system');
+                    showToast(reason, 'info');
+                }
+            }
+
+            // Audio wave
+            function updateAudioWave(level) {
+                const bars = document.querySelectorAll('.audio-wave span');
+                const h = Math.min(20, Math.max(4, level * 20));
+                bars.forEach((bar, i) => {
+                    const height = h * (0.4 + Math.random() * 0.6);
+                    bar.style.height = Math.max(4, height) + 'px';
+                    bar.classList.add('active');
+                });
+            }
+
+            function resetAudioWave() {
+                const bars = document.querySelectorAll('.audio-wave span');
+                const heights = [6, 12, 18, 10, 14];
+                bars.forEach((bar, i) => {
+                    bar.style.height = heights[i] + 'px';
+                    bar.classList.remove('active');
+                });
+            }
+
+            // PARLER (appel sortant)
+            document.getElementById('twSpeak').addEventListener('click', function() {
+                if (isCallActive) {
+                    showToast('⚠️ Vous êtes déjà en communication', 'error');
+                    return;
+                }
+
+                const targetId = prompt('Entrez l\'ID de l\'autre appareil:');
+                if (!targetId) return;
+                if (targetId === peerId) {
+                    showToast('⚠️ Vous ne pouvez pas vous appeler vous-même', 'error');
+                    return;
+                }
+
+                document.getElementById('twStatus').textContent = '📞 Appel en cours...';
+                this.disabled = true;
+                addTwMessage('📞 Appel', 'Appel vers ' + targetId + '...', 'system');
+
+                navigator.mediaDevices.getUserMedia({
+                    audio: { echoCancellation: true, noiseSuppression: true }
+                })
+                .then((stream) => {
+                    localStream = stream;
+                    const call = peer.call(targetId, stream);
+                    startCall(call);
+                })
+                .catch((err) => {
+                    console.error('Erreur micro:', err);
+                    showToast('❌ Erreur micro: ' + err.message, 'error');
+                    document.getElementById('twStatus').textContent = '❌ Micro indisponible';
+                    this.disabled = false;
+                });
+            });
+
+            // ÉCOUTER
+            document.getElementById('twListen').addEventListener('click', function() {
+                if (this.classList.contains('listening')) {
+                    // Désactiver
+                    this.classList.remove('listening');
+                    this.textContent = '🎧 Écouter';
+                    if (listenInterval) {
+                        clearInterval(listenInterval);
+                        listenInterval = null;
+                    }
+                    document.getElementById('twStatus').textContent = '🔇 Écoute désactivée';
+                    showToast('🔇 Écoute désactivée', 'info');
+                } else {
+                    // Activer
+                    this.classList.add('listening');
+                    this.textContent = '⏹️ Écoute...';
+                    document.getElementById('twStatus').textContent = '🎧 Écoute active · Réception audio';
+                    showToast('🎧 Écoute active', 'success');
+
+                    // Simuler des messages des autres groupes
+                    listenInterval = setInterval(() => {
+                        if (this.classList.contains('listening')) {
+                            simulateOtherMessage();
+                        }
+                    }, 5000);
+                }
+            });
+
+            // STOP (raccrocher)
+            document.getElementById('twStop').addEventListener('click', function() {
+                if (isCallActive) {
+                    endCall('🔚 Vous avez raccroché');
+                }
+            });
+
+            // CLEAR (effacer les messages)
+            document.getElementById('twClear').addEventListener('click', function() {
+                twMessages.innerHTML = '';
+                addTwMessage('🔄 Système', '🗑️ Messages effacés', 'system');
+            });
+
+            // =========================================================
+            // 8. ALERTE KIDNAPPING
+            // =========================================================
+            const btnAlert = document.getElementById('btnAlert');
+            let alertActive = false;
+
+            btnAlert.addEventListener('click', function() {
+                if (alertActive) {
+                    showToast('⚠️ Alerte déjà en cours', 'error');
+                    return;
+                }
+                alertActive = true;
+                this.disabled = true;
+                this.innerHTML = '🚨 ALERTE EN COURS... <span class="sub">⏳ Intervention</span>';
+
+                showToast('🚨 ALERTE KIDNAPPING ! Tous les groupes prévenus', 'error');
+                addTwMessage('🚨 ALERTE', `🔴 KIDNAPPING · Secteur Mahabibo (Groupe ${currentGroup})`, 'alert');
+
+                setTimeout(() => addTwMessage('Groupe B', '✅ Reçu ! Intervention en cours', 'g2'), 1500);
+                setTimeout(() => addTwMessage('Groupe C', '✅ On se rapproche !', 'g3'), 2500);
+                setTimeout(() => addTwMessage('🔄 Système', '📡 Gendarmes & Police notifiés (17 · 112)', 'system'),
+                    3500);
+
+                if (useFirebase && db) {
+                    db.ref('alerts').push({
+                        type: 'kidnapping',
+                        location: 'Mahabibo',
+                        group: currentGroup,
+                        userId: getUserId(),
+                        timestamp: Date.now(),
+                        active: true
+                    });
+                }
+
+                setTimeout(() => {
+                    alertActive = false;
+                    btnAlert.disabled = false;
+                    btnAlert.innerHTML =
+                        '🚨 ALERTE KIDNAPPING <span class="sub">⚠️ Tous les groupes & forces de l\'ordre</span>';
+                    showToast('✅ Alerte terminée', 'success');
+                    addTwMessage('🔄 Système', '✅ Fin d\'alerte · Restez vigilants', 'system');
+                }, 20000);
+            });
+
+            // =========================================================
+            // 9. ACTIONS DES GROUPES
+            // =========================================================
+            window.sendPosition = function(group) {
+                showToast(`📍 Position du Groupe ${group} sur la carte`, 'info');
+                if (markers[group]) {
+                    map.setView(markers[group].getLatLng(), 17);
+                    markers[group].openPopup();
+                }
+                addTwMessage(`Groupe ${group}`, `📍 Position partagée`, group === 'A' ? '' : 'g' + (group === 'B' ?
+                2 : 3));
+            };
+
+            window.callGroup = function(group) {
+                showToast(`📡 Appel vocal vers le Groupe ${group}`, 'info');
+                addTwMessage(`🔄 Système`, `📡 Appel du Groupe ${group} en cours...`, 'system');
+                setTimeout(() => {
+                    addTwMessage(`Groupe ${group}`, `✅ Réponse du Groupe ${group}`, group === 'A' ? '' : 'g' +
+                        (group === 'B' ? 2 : 3));
+                    showToast(`✅ Groupe ${group} a répondu`, 'success');
+                }, 2000);
+            };
+
+            // =========================================================
+            // 10. SÉLECTEUR DE GROUPE
+            // =========================================================
+            document.getElementById('groupSelector').addEventListener('change', function() {
+                currentGroup = this.value;
+                document.getElementById('userBadge').innerHTML =
+                    `👤 <select id="groupSelector"><option value="A" ${currentGroup === 'A' ? 'selected' : ''}>Groupe A</option><option value="B" ${currentGroup === 'B' ? 'selected' : ''}>Groupe B</option><option value="C" ${currentGroup === 'C' ? 'selected' : ''}>Groupe C</option></select>`;
+
+                // Mettre à jour les badges
+                document.getElementById('groupABadge').textContent = currentGroup === 'A' ? 'vous' : '';
+                document.getElementById('groupACard').style.borderLeftColor = currentGroup === 'A' ? '#f5c842' :
+                    '#e74c3c';
+
+                showToast(`🔄 Vous êtes maintenant dans le Groupe ${currentGroup}`, 'info');
+                addTwMessage(`🔄 Système`, `👤 ${getUserId().substr(0, 6)} rejoint le Groupe ${currentGroup}`,
+                    'system');
+
+                // Mettre à jour Firebase
+                if (useFirebase && db) {
+                    db.ref('users/' + getUserId()).set({
+                        group: currentGroup,
+                        timestamp: Date.now()
+                    });
+                }
+            });
+
+            // =========================================================
+            // 11. MESSAGES DE DÉMARRAGE
+            // =========================================================
+            setTimeout(() => {
+                addTwMessage('🔄 Système', '🔰 FOKON\'ALERT prêt · 3 groupes connectés', 'system');
+            }, 500);
+            setTimeout(() => {
+                addTwMessage('Groupe B', '✅ Patrouille en cours', 'g2');
+            }, 1500);
+            setTimeout(() => {
+                addTwMessage('Groupe C', '✅ Prêt · secteur est', 'g3');
+            }, 2500);
+
+            // =========================================================
+            // 12. INIT PEERJS
+            // =========================================================
+            initPeerJS();
+
+            // =========================================================
+            // 13. RACCOURCIS CLAVIER
+            // =========================================================
+            document.addEventListener('keydown', function(e) {
+                if (e.altKey && e.key === 'a') { e.preventDefault();
+                    btnAlert.click(); }
+                if (e.altKey && e.key === 'l') { e.preventDefault();
+                    document.getElementById('twListen').click(); }
+                if (e.altKey && e.key === 'p') { e.preventDefault();
+                    document.getElementById('twSpeak').click(); }
+                if (e.altKey && e.key === 's') { e.preventDefault();
+                    document.getElementById('twStop').click(); }
+            });
+
+            console.log('🛡️ FOKON\'ALERT prêt !');
+            console.log('📡 Mode:', useFirebase ? '🔥 Multi-utilisateur' : '📡 Local');
+            console.log('👤 ID:', getUserId());
+            console.log('🎤 ID PeerJS:', peerId);
+            console.log('💡 Raccourcis: Alt+A (alerte) Alt+L (écouter) Alt+P (parler) Alt+S (stop)');
+
+        })();
+    </script>
+
 </body>
 </html>
