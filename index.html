@@ -1,16 +1,22 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#0b1725">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>FOKON'ALERT — Audio + Multi-appareils</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b1725" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>FOKON'ALERT — Audio + Multi-appareils + Temps réel</title>
 
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></noscript>
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <!-- PeerJS pour l'audio -->
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
     <style>
         * {
@@ -19,58 +25,17 @@
             box-sizing: border-box;
         }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
             background: #0b1725;
             color: #e8edf2;
-            height: 100vh;
-            height: 100dvh;
-            overflow-y: auto;
-            overflow-x: hidden;
+            min-height: 100vh;
+            padding-bottom: 80px;
             -webkit-tap-highlight-color: transparent;
             -webkit-user-select: none;
             user-select: none;
-            -webkit-touch-callout: none;
-            touch-action: manipulation;
         }
-
-        /* Écran de chargement */
-        .loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: #0b1725;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 99999;
-            transition: opacity 0.4s;
-        }
-        .loading-screen.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-        .loading-spinner {
-            width: 35px;
-            height: 35px;
-            border: 3px solid #143a57;
-            border-top-color: #f5c842;
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .loading-text {
-            color: #f5c842;
-            font-size: 0.8rem;
-            font-weight: 700;
-            margin-top: 10px;
-        }
-
-        /* Bannière hors-ligne */
+        
+        /* ═══ BANNIÈRE HORS-LIGNE ═══ */
         .offline-bar {
             background: #e67e22;
             color: #fff;
@@ -85,10 +50,10 @@
         }
         .offline-bar.show { display: block; }
 
-        /* Header */
+        /* ═══ HEADER ═══ */
         .header {
             background: linear-gradient(135deg, #0a1e32, #143a57);
-            padding: 10px 14px;
+            padding: 14px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -97,11 +62,10 @@
             top: 0;
             z-index: 1000;
             flex-wrap: wrap;
-            gap: 6px;
-            min-height: 48px;
+            gap: 8px;
         }
         .header .logo {
-            font-size: 1rem;
+            font-size: 1.2rem;
             font-weight: 800;
         }
         .header .logo span {
@@ -110,56 +74,59 @@
         .header .status {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.6rem;
+            gap: 10px;
+            font-size: 0.7rem;
         }
         .header .status .dot {
-            width: 7px;
-            height: 7px;
+            width: 8px;
+            height: 8px;
             background: #5dffa0;
             border-radius: 50%;
             animation: pulse 2s infinite;
         }
         @keyframes pulse {
-            0%,100% { opacity: 1; }
-            50% { opacity: 0.3; }
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
         }
         .header .user-badge {
             background: #1a3a55;
-            padding: 4px 10px;
+            padding: 4px 14px;
             border-radius: 30px;
-            font-size: 0.6rem;
+            font-size: 0.7rem;
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
         .header .user-badge select {
             background: transparent;
-            border: 1px solid #2a4a6a;
+            border: none;
             color: #fff;
             font-weight: 700;
-            font-size: 0.6rem;
+            font-size: 0.7rem;
             cursor: pointer;
             font-family: inherit;
-            padding: 2px 4px;
-            border-radius: 8px;
         }
         .header .user-badge select option {
             background: #0b1725;
             color: #fff;
         }
 
-        /* Barre de localisation */
+        /* ═══ BARRE DE LOCALISATION ═══ */
         .loc-bar {
             background: #0f2238;
-            padding: 6px 14px;
+            padding: 8px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 4px;
-            font-size: 0.7rem;
+            gap: 6px;
+            font-size: 0.8rem;
             border-bottom: 1px solid #1a3a55;
         }
         .loc-bar .city {
@@ -168,8 +135,8 @@
         }
         .loc-bar .stats {
             display: flex;
-            gap: 10px;
-            font-size: 0.6rem;
+            gap: 16px;
+            font-size: 0.7rem;
             color: #8ab4d6;
         }
         .loc-bar .stats .num {
@@ -177,120 +144,120 @@
             font-weight: 700;
         }
 
-        /* Carte */
+        /* ═══ CARTE ═══ */
         .map-wrapper {
-            margin: 8px 12px;
-            border-radius: 12px;
+            margin: 12px 16px;
+            border-radius: 16px;
             overflow: hidden;
             border: 2px solid #1a3a55;
         }
         #map {
-            height: 280px;
+            height: 320px;
             width: 100%;
-            min-height: 200px;
-            background: #0a1520;
+            min-height: 220px;
         }
 
-        /* Titres */
+        /* ═══ TITRES DE SECTION ═══ */
         .section-title {
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             font-weight: 700;
-            padding: 12px 16px 6px;
+            padding: 16px 20px 8px;
             color: #b6cdff;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        /* Groupes */
+        /* ═══ LISTE DES GROUPES ═══ */
         .group-list {
             display: flex;
-            gap: 8px;
-            padding: 0 12px 8px;
+            gap: 10px;
+            padding: 0 16px 10px;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
         }
-        .group-list::-webkit-scrollbar { display: none; }
         .group-card {
             background: #112b42;
-            border-radius: 12px;
-            padding: 10px 12px;
-            min-width: 120px;
+            border-radius: 14px;
+            padding: 14px 16px;
+            min-width: 140px;
             flex-shrink: 0;
-            border-left: 3px solid #f5c842;
+            border-left: 4px solid #f5c842;
             cursor: pointer;
             transition: transform 0.1s;
         }
-        .group-card:active { transform: scale(0.97); }
+        .group-card:active {
+            transform: scale(0.97);
+        }
         .group-card .g-name {
             font-weight: 700;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
         }
         .group-card .g-status {
-            font-size: 0.6rem;
+            font-size: 0.65rem;
             color: #8ab4d6;
-            margin-top: 1px;
-        }
-        .group-card .g-members {
-            font-size: 0.55rem;
-            color: #5a7f9e;
             margin-top: 2px;
         }
+        .group-card .g-members {
+            font-size: 0.6rem;
+            color: #5a7f9e;
+            margin-top: 4px;
+        }
         .group-card .g-actions {
-            margin-top: 6px;
+            margin-top: 8px;
             display: flex;
-            gap: 4px;
+            gap: 6px;
             flex-wrap: wrap;
         }
         .group-card .g-actions button {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             color: #b6cdff;
-            padding: 4px 10px;
+            padding: 3px 12px;
             border-radius: 30px;
-            font-size: 0.5rem;
+            font-size: 0.55rem;
             font-weight: 600;
             cursor: pointer;
             font-family: inherit;
             transition: background 0.2s;
-            -webkit-tap-highlight-color: transparent;
         }
-        .group-card .g-actions button:active {
-            background: rgba(255,255,255,0.15);
+        .group-card .g-actions button:hover {
+            background: rgba(255, 255, 255, 0.12);
         }
         .group-card .g-actions button.primary {
             background: #f5c842;
             color: #0b1725;
             border-color: #f5c842;
         }
+        .group-card .g-actions button.primary:hover {
+            background: #ffd966;
+        }
 
-        /* Bouton Alerte */
+        /* ═══ BOUTON ALERTE ═══ */
         .alert-zone {
-            padding: 8px 12px;
+            padding: 10px 16px;
         }
         .btn-alert {
             width: 100%;
-            padding: 14px;
+            padding: 16px;
             background: linear-gradient(135deg, #b03a2e, #e74c3c);
             border: none;
-            border-radius: 50px;
+            border-radius: 60px;
             color: #fff;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 800;
             text-transform: uppercase;
-            box-shadow: 0 4px 0 #78281f;
+            box-shadow: 0 5px 0 #78281f;
             cursor: pointer;
             font-family: inherit;
             transition: all 0.08s;
-            -webkit-tap-highlight-color: transparent;
         }
         .btn-alert:active {
-            transform: translateY(3px);
+            transform: translateY(4px);
             box-shadow: 0 1px 0 #78281f;
         }
         .btn-alert:disabled {
             opacity: 0.5;
-            transform: translateY(2px);
+            transform: translateY(3px);
             pointer-events: none;
         }
         .btn-alert .sub {
@@ -300,220 +267,319 @@
             opacity: 0.8;
         }
 
-        /* Talkie-Walkie */
+        /* ═══ TALKIE-WALKIE ═══ */
         .tw-section {
             background: #0d2236;
-            margin: 6px 12px 12px;
-            border-radius: 12px;
-            padding: 10px 12px;
+            margin: 6px 16px 16px;
+            border-radius: 16px;
+            padding: 14px 16px;
             border: 1px solid #1a3a55;
         }
         .tw-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
         .tw-header .tw-title {
             font-weight: 700;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
-        .audio-indicator {
-            width: 8px;
-            height: 8px;
+        .tw-header .tw-title .audio-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             background: #4a6a88;
             transition: background 0.3s;
         }
-        .audio-indicator.active { background: #2ecc71; animation: pulse 0.8s infinite; }
-        .audio-indicator.recording { background: #e74c3c; animation: pulse 0.4s infinite; }
-        .tw-channel {
+        .tw-header .tw-title .audio-indicator.active {
+            background: #2ecc71;
+            animation: pulse 1s infinite;
+        }
+        .tw-header .tw-title .audio-indicator.recording {
+            background: #e74c3c;
+            animation: pulse 0.5s infinite;
+        }
+        .tw-header .tw-channel {
             background: #1a3a55;
-            padding: 2px 10px;
-            border-radius: 20px;
-            font-size: 0.5rem;
+            padding: 3px 14px;
+            border-radius: 30px;
+            font-size: 0.6rem;
             color: #7fb6e6;
-            max-width: 90px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
         }
         .tw-messages {
             background: #071725;
-            border-radius: 8px;
-            padding: 8px 10px;
-            max-height: 100px;
+            border-radius: 12px;
+            padding: 10px 14px;
+            max-height: 120px;
             overflow-y: auto;
-            font-size: 0.7rem;
-            line-height: 1.5;
-            margin-bottom: 8px;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            margin-bottom: 10px;
         }
-        .tw-messages::-webkit-scrollbar { width: 2px; }
-        .tw-messages::-webkit-scrollbar-thumb { background: #f5c842; border-radius: 10px; }
+        .tw-messages::-webkit-scrollbar {
+            width: 2px;
+        }
+        .tw-messages::-webkit-scrollbar-thumb {
+            background: #f5c842;
+            border-radius: 10px;
+        }
         .tw-msg {
-            padding: 1px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         }
         .tw-msg .who {
             font-weight: 700;
             color: #f5c842;
         }
-        .tw-msg .who.g2 { color: #2ecc71; }
-        .tw-msg .who.g3 { color: #5dade2; }
-        .tw-msg .who.system { color: #e67e22; }
-        .tw-msg .who.alert { color: #e74c3c; }
+        .tw-msg .who.g2 {
+            color: #2ecc71;
+        }
+        .tw-msg .who.g3 {
+            color: #5dade2;
+        }
+        .tw-msg .who.system {
+            color: #e67e22;
+        }
+        .tw-msg .who.alert {
+            color: #e74c3c;
+        }
         .tw-msg .time {
             color: #4a6a88;
-            font-size: 0.5rem;
-            margin-left: 6px;
+            font-size: 0.55rem;
+            margin-left: 8px;
         }
+
+        /* ═══ CONTRÔLES TALKIE ═══ */
         .tw-controls {
             display: flex;
-            gap: 5px;
+            gap: 8px;
             flex-wrap: wrap;
         }
         .tw-controls button {
             flex: 1;
-            min-width: 50px;
-            padding: 8px 10px;
+            min-width: 60px;
+            padding: 10px 14px;
             border: none;
-            border-radius: 30px;
+            border-radius: 40px;
             font-weight: 700;
-            font-size: 0.65rem;
+            font-size: 0.75rem;
+            background: #1a3a55;
+            color: #cde0f5;
             cursor: pointer;
             font-family: inherit;
             transition: all 0.15s;
-            -webkit-tap-highlight-color: transparent;
         }
-        .tw-controls button:active { transform: scale(0.94); }
-        .btn-record {
+        .tw-controls button:active {
+            transform: scale(0.96);
+        }
+        .tw-controls button.record {
             background: #c0392b;
             color: #fff;
         }
-        .btn-record.listening {
+        .tw-controls button.record.listening {
             background: #1f8b4c;
         }
-        .btn-record.recording {
+        .tw-controls button.record.recording {
             background: #e74c3c;
-            animation: pulse 0.6s infinite;
+            animation: pulse 0.8s infinite;
         }
-        .btn-secondary {
+        .tw-controls button.secondary {
             background: transparent;
             border: 1px solid #1a3a55;
-            color: #8ab4d6;
         }
         .tw-controls button:disabled {
-            opacity: 0.3;
+            opacity: 0.4;
             pointer-events: none;
         }
         .tw-status {
-            font-size: 0.5rem;
+            font-size: 0.55rem;
             color: #4a6a88;
             text-align: center;
-            margin-top: 6px;
+            margin-top: 8px;
         }
 
-        /* Toast */
+        /* ═══ AUDIO WAVE ═══ */
+        .audio-wave {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            height: 20px;
+            margin: 0 4px;
+        }
+        .audio-wave span {
+            display: inline-block;
+            width: 3px;
+            height: 8px;
+            background: #4a6a88;
+            border-radius: 3px;
+            transition: height 0.1s;
+        }
+        .audio-wave span.active {
+            background: #2ecc71;
+        }
+
+        /* ═══ TOAST ═══ */
         .toast {
             position: fixed;
-            top: 60px;
+            top: 75px;
             left: 50%;
             transform: translateX(-50%);
             background: #1a2a3e;
-            padding: 8px 18px;
-            border-radius: 30px;
+            padding: 12px 24px;
+            border-radius: 60px;
             font-weight: 600;
-            font-size: 0.7rem;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+            font-size: 0.8rem;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.8);
             z-index: 9999;
             display: none;
-            max-width: 90%;
+            max-width: 92%;
             text-align: center;
-            border: 1px solid rgba(255,255,255,0.08);
-            pointer-events: none;
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        .toast.show { display: block; animation: toastIn 0.35s ease; }
-        .toast.error { border-color: #e74c3c; }
-        .toast.success { border-color: #2ecc71; }
-        .toast.info { border-color: #3498db; }
-        @keyframes toastIn {
-            from { opacity: 0; transform: translateX(-50%) translateY(-15px); }
-            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.show {
+            display: block;
+            animation: slideDown 0.4s ease;
+        }
+        .toast.error {
+            border-color: #e74c3c;
+        }
+        .toast.success {
+            border-color: #2ecc71;
+        }
+        .toast.info {
+            border-color: #3498db;
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
         }
 
-        /* Marqueurs */
+        /* ═══ MARQUEURS D'ALERTE ═══ */
         .alert-marker {
             background: none;
             border: none;
             text-align: center;
-            font-size: 24px;
-            line-height: 24px;
+            font-size: 28px;
+            line-height: 28px;
             animation: alertPulse 1s infinite;
-            filter: drop-shadow(0 0 8px rgba(231,76,60,0.8));
+            filter: drop-shadow(0 0 8px rgba(231, 76, 60, 0.8));
         }
         .alert-marker .label {
             display: block;
-            font-size: 9px;
+            font-size: 10px;
             font-weight: 700;
             color: #e74c3c;
-            background: rgba(0,0,0,0.8);
-            padding: 1px 6px;
-            border-radius: 3px;
-            margin-top: -3px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-top: -4px;
             white-space: nowrap;
         }
         @keyframes alertPulse {
-            0%,100% { transform: scale(1); }
+            0%, 100% { transform: scale(1); }
             50% { transform: scale(1.3); }
         }
+        .alert-circle {
+            animation: circlePulse 1.5s infinite;
+        }
+        @keyframes circlePulse {
+            0% { opacity: 0.8; r: 50; }
+            100% { opacity: 0; r: 200; }
+        }
 
-        /* Adaptatif */
-        @media (max-width: 360px) {
-            .header .logo { font-size: 0.85rem; }
-            .header .user-badge { font-size: 0.5rem; padding: 3px 8px; }
-            .loc-bar { font-size: 0.6rem; padding: 4px 10px; }
-            .loc-bar .stats { font-size: 0.5rem; gap: 6px; }
-            #map { height: 220px; }
-            .group-card { min-width: 100px; padding: 8px 10px; }
-            .group-card .g-name { font-size: 0.7rem; }
-            .btn-alert { font-size: 0.85rem; padding: 12px; }
-            .tw-section { padding: 8px 10px; }
-            .tw-messages { font-size: 0.6rem; max-height: 80px; }
-            .tw-controls button { font-size: 0.55rem; padding: 6px 8px; min-width: 40px; }
+        /* ═══ LÉGENDE ═══ */
+        .map-legend {
+            position: absolute;
+            bottom: 20px;
+            left: 10px;
+            z-index: 500;
+            background: rgba(10, 26, 42, 0.9);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 0.5rem;
+            color: #8ab4d6;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: none;
         }
-        @media (max-height: 600px) {
-            #map { height: 180px; }
-            .tw-messages { max-height: 60px; }
+        .map-legend .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin: 2px 0;
         }
-        @media (prefers-reduced-motion: reduce) {
-            .loading-spinner, .audio-indicator.active, .audio-indicator.recording, .btn-record.recording, .alert-marker { animation: none; }
+
+        /* ═══ RESPONSIVE ═══ */
+        @media (max-width: 600px) {
+            .header .logo {
+                font-size: 1rem;
+            }
+            .header .user-badge {
+                font-size: 0.6rem;
+                padding: 3px 10px;
+            }
+            .loc-bar {
+                font-size: 0.7rem;
+                padding: 6px 14px;
+            }
+            .loc-bar .stats {
+                font-size: 0.6rem;
+                gap: 10px;
+            }
+            #map {
+                height: 250px;
+            }
+            .group-card {
+                min-width: 110px;
+                padding: 10px 12px;
+            }
+            .group-card .g-name {
+                font-size: 0.75rem;
+            }
+            .btn-alert {
+                font-size: 0.9rem;
+                padding: 14px;
+            }
+            .tw-section {
+                padding: 10px 12px;
+            }
+            .tw-messages {
+                font-size: 0.7rem;
+                max-height: 100px;
+            }
+            .tw-controls button {
+                font-size: 0.65rem;
+                padding: 8px 10px;
+                min-width: 50px;
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- Loading -->
-    <div class="loading-screen" id="loadingScreen">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">FOKON'ALERT</div>
-    </div>
-
-    <!-- Offline -->
+    <!-- ===== BANNIÈRE HORS-LIGNE ===== -->
     <div class="offline-bar" id="offlineBar">📵 Mode hors-ligne — Fonctions limitées</div>
 
-    <!-- Toast -->
+    <!-- ===== TOAST ===== -->
     <div class="toast" id="toast"></div>
 
-    <!-- Header -->
+    <!-- ===== HEADER ===== -->
     <header class="header">
         <div class="logo">🛡️ FOKON'<span>ALERT</span></div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
             <div class="status">
-                <span class="dot"></span>
-                <span id="connectionStatus">📡 Local</span>
+                <span class="dot" id="statusDot"></span>
+                <span id="connectionStatus">Connecté</span>
             </div>
             <div class="user-badge">
                 👤 <select id="groupSelector">
@@ -525,45 +591,57 @@
         </div>
     </header>
 
-    <!-- Localisation -->
+    <!-- ===== LOCALISATION ===== -->
     <div class="loc-bar">
         <div>📍 <span class="city" id="currentCity">Majunga · Mahabibo</span></div>
         <div class="stats">
-            <span>👥 <span class="num" id="groupCount">3</span> gr.</span>
-            <span>🟢 <span class="num" id="memberCount">15</span> mb.</span>
-            <span>⏱️ <span class="num" id="patrolCount">4</span> rd.</span>
+            <span>👥 <span class="num" id="groupCount">3</span> groupes</span>
+            <span>🟢 <span class="num" id="memberCount">15</span> membres</span>
+            <span>⏱️ <span class="num" id="patrolCount">4</span> rondes</span>
         </div>
     </div>
 
-    <!-- Carte -->
-    <div class="map-wrapper">
+    <!-- ===== CARTE ===== -->
+    <div class="map-wrapper" style="position:relative;">
         <div id="map"></div>
+        <!-- Légende -->
+        <div class="map-legend">
+            <div class="legend-item">📍 <b style="color:#e74c3c;">Vous (Groupe A)</b></div>
+            <div class="legend-item">🟢 <b style="color:#2ecc71;">Groupe B</b></div>
+            <div class="legend-item">🔵 <b style="color:#3498db;">Groupe C</b></div>
+            <div class="legend-item">🚔 <b style="color:#f5c842;">Police</b></div>
+            <div class="legend-item">⭐ <b style="color:#8e44ad;">Gendarmerie</b></div>
+            <div class="legend-item">🚨 <b style="color:#e74c3c;">Alerte kidnapping</b></div>
+        </div>
     </div>
 
-    <!-- Groupes -->
+    <!-- ===== GROUPES ===== -->
     <div class="section-title">👥 Groupes de vigilance</div>
     <div class="group-list" id="groupList">
+        <!-- Groupe A -->
         <div class="group-card" style="border-left-color:#e74c3c;" id="groupACard">
-            <div class="g-name">🔴 Groupe A <span style="font-size:0.45rem;background:#e74c3c30;padding:0 6px;border-radius:10px;" id="groupABadge">vous</span></div>
-            <div class="g-status" id="groupAStatus">Patrouille · Nord</div>
+            <div class="g-name">🔴 Groupe A <span style="font-size:0.5rem; background:#e74c3c30; padding:0 8px; border-radius:20px;" id="groupABadge">vous</span></div>
+            <div class="g-status" id="groupAStatus">En patrouille · Nord</div>
             <div class="g-members" id="groupAMembers">6 membres</div>
             <div class="g-actions">
-                <button class="primary" onclick="sendPosition('A')">📍 Pos.</button>
+                <button class="primary" onclick="sendPosition('A')">📍 Position</button>
                 <button onclick="callGroup('A')">📡 Appel</button>
             </div>
         </div>
+        <!-- Groupe B -->
         <div class="group-card" style="border-left-color:#2ecc71;" id="groupBCard">
             <div class="g-name">🟢 Groupe B</div>
-            <div class="g-status" id="groupBStatus">Rondes · Sud</div>
+            <div class="g-status" id="groupBStatus">Rondes actives · Sud</div>
             <div class="g-members" id="groupBMembers">5 membres</div>
             <div class="g-actions">
                 <button onclick="sendPosition('B')">📍 Voir</button>
                 <button onclick="callGroup('B')">📡 Appel</button>
             </div>
         </div>
+        <!-- Groupe C -->
         <div class="group-card" style="border-left-color:#3498db;" id="groupCCard">
             <div class="g-name">🔵 Groupe C</div>
-            <div class="g-status" id="groupCStatus">Intervention · Est</div>
+            <div class="g-status" id="groupCStatus">En intervention · Est</div>
             <div class="g-members" id="groupCMembers">4 membres</div>
             <div class="g-actions">
                 <button onclick="sendPosition('C')">📍 Voir</button>
@@ -572,7 +650,7 @@
         </div>
     </div>
 
-    <!-- Alerte -->
+    <!-- ===== ALERTE ===== -->
     <div class="alert-zone">
         <button class="btn-alert" id="btnAlert">
             🚨 ALERTE KIDNAPPING
@@ -580,508 +658,812 @@
         </button>
     </div>
 
-    <!-- Talkie-Walkie -->
+    <!-- ===== TALKIE-WALKIE ===== -->
     <div class="tw-section">
         <div class="tw-header">
             <span class="tw-title">
                 🎙️ Talkie-Walkie
+                <span class="audio-wave" id="audioWave">
+                    <span></span><span></span><span></span><span></span><span></span>
+                </span>
                 <span class="audio-indicator" id="audioIndicator"></span>
             </span>
             <span class="tw-channel" id="twChannel">🔓 Canal général</span>
         </div>
         <div class="tw-messages" id="twMessages">
-            <div class="tw-msg"><span class="who system">🔄 Système</span> <span class="time">--:--</span> — Canal prêt</div>
+            <div class="tw-msg"><span class="who system">🔄 Système</span> <span class="time">--:--</span> — Canal prêt · 3 groupes connectés</div>
         </div>
         <div class="tw-controls">
-            <button id="twListen" class="btn-record listening">🎧 Écouter</button>
-            <button id="twSpeak" class="btn-record">🎤 Parler</button>
-            <button id="twStop" class="btn-secondary" disabled>⏹️ Stop</button>
-            <button id="twClear" class="btn-secondary">🗑️</button>
+            <button id="twListen" class="record listening">🎧 Écouter</button>
+            <button id="twSpeak" class="record">🎤 Parler</button>
+            <button id="twStop" class="secondary" disabled>⏹️ Arrêter</button>
+            <button id="twClear" class="secondary">🗑️ Effacer</button>
         </div>
-        <div class="tw-status" id="twStatus">⚡ Appuyez sur "Parler" pour transmettre</div>
+        <div class="tw-status" id="twStatus">
+            ⚡ Appuyez sur "Parler" pour une transmission vocale en direct
+        </div>
     </div>
 
     <!-- ============================================================ -->
-    <!-- SCRIPTS (chargement optimisé) -->
+    <!-- ===== JAVASCRIPT COMPLET ===== -->
     <!-- ============================================================ -->
     <script>
-        // Leaflet chargé en différé
-        function loadScript(src) {
-            return new Promise((resolve, reject) => {
-                const s = document.createElement('script');
-                s.src = src;
-                s.onload = resolve;
-                s.onerror = reject;
-                document.head.appendChild(s);
-            });
-        }
+        (function() {
+            'use strict';
 
-        // Détection connexion
-        let isOnline = navigator.onLine;
-        window.addEventListener('online', () => { isOnline = true; document.getElementById('offlineBar').classList.remove('show'); });
-        window.addEventListener('offline', () => { isOnline = false; document.getElementById('offlineBar').classList.add('show'); });
-        if (!isOnline) document.getElementById('offlineBar').classList.add('show');
-
-        // ============================================================
-        // INITIALISATION PRINCIPALE
-        // ============================================================
-        async function initApp() {
-            try {
-                // Charger Leaflet
-                await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
-                initMap();
-                
-                // Charger PeerJS (optionnel)
-                try {
-                    await loadScript('https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js');
-                    initPeerJS();
-                } catch(e) {
-                    console.warn('PeerJS non chargé — mode texte');
-                    document.getElementById('connectionStatus').textContent = '📡 Mode texte';
+            // =========================================================
+            // 1. DÉTECTION CONNEXION
+            // =========================================================
+            let isOnline = navigator.onLine;
+            const offlineBar = document.getElementById('offlineBar');
+            
+            function updateOnlineStatus() {
+                isOnline = navigator.onLine;
+                if (!isOnline) {
+                    offlineBar.classList.add('show');
+                    document.getElementById('statusDot').style.background = '#e74c3c';
+                } else {
+                    offlineBar.classList.remove('show');
+                    document.getElementById('statusDot').style.background = '#5dffa0';
                 }
-                
-                // Cacher le loading
-                setTimeout(() => {
-                    document.getElementById('loadingScreen').classList.add('hidden');
-                    setTimeout(() => {
-                        const ls = document.getElementById('loadingScreen');
-                        if (ls) ls.remove();
-                    }, 500);
-                }, 600);
-                
-                initAll();
-                
-            } catch(e) {
-                console.error('Erreur:', e);
-                document.getElementById('loadingScreen').innerHTML = 
-                    '<div style="color:#e74c3c;text-align:center;padding:20px;">' +
-                    '⚠️ Erreur de chargement<br>' +
-                    '<button onclick="location.reload()" style="margin-top:10px;padding:8px 20px;border-radius:20px;background:#f5c842;border:none;font-weight:700;">Réessayer</button>' +
-                    '</div>';
             }
-        }
+            window.addEventListener('online', updateOnlineStatus);
+            window.addEventListener('offline', updateOnlineStatus);
+            updateOnlineStatus();
 
-        // ============================================================
-        // VARIABLES GLOBALES
-        // ============================================================
-        let map, markers = {}, userLat = null, userLng = null, currentGroup = 'A';
-        let peer = null, peerId = '', currentCall = null, localStream = null;
-        let isCallActive = false, isListening = false, listenInterval = null;
-        let alertActive = false;
+            // =========================================================
+            // 2. FIREBASE
+            // =========================================================
+            const firebaseConfig = {
+                apiKey: "AIzaSyDemoKey123456789",
+                authDomain: "ton-projet.firebaseapp.com",
+                databaseURL: "https://ton-projet-default-rtdb.firebaseio.com",
+                projectId: "ton-projet",
+                storageBucket: "ton-projet.appspot.com",
+                messagingSenderId: "123456789",
+                appId: "1:123456789:web:abcdef123456"
+            };
 
-        // ============================================================
-        // CARTE
-        // ============================================================
-        function initMap() {
-            map = L.map('map', {
+            let useFirebase = false;
+            let db = null;
+            let currentGroup = 'A';
+            let userLat = null;
+            let userLng = null;
+
+            try {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                useFirebase = true;
+                console.log('🔥 Firebase connecté !');
+                document.getElementById('connectionStatus').textContent = '🔥 Connecté (cloud)';
+            } catch (e) {
+                console.warn('⚠️ Firebase non configuré, mode local');
+                document.getElementById('connectionStatus').textContent = '📡 Mode local';
+            }
+
+            // =========================================================
+            // 3. CARTE LEAFLET
+            // =========================================================
+            const map = L.map('map', {
                 center: [-15.7167, 46.3167],
                 zoom: 15,
                 zoomControl: false,
-                attributionControl: false
             });
-            
+
             L.control.zoom({ position: 'topright', zoomInText: '+', zoomOutText: '−' }).addTo(map);
-            
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
             }).addTo(map);
-            
-            // Marqueurs des groupes
-            const groupPositions = {
-                A: [-15.7167, 46.3167],
-                B: [-15.7280, 46.3220],
-                C: [-15.7100, 46.3300]
-            };
-            
-            const colors = { A: '#e74c3c', B: '#2ecc71', C: '#3498db' };
-            
-            for (const [group, pos] of Object.entries(groupPositions)) {
-                markers[group] = L.circleMarker(pos, {
-                    radius: 8,
-                    fillColor: colors[group],
-                    color: '#fff',
-                    weight: 2,
-                    fillOpacity: 0.9
-                }).addTo(map).bindPopup(`<b>Groupe ${group}</b><br>👥 ${group === 'A' ? '6' : group === 'B' ? '5' : '4'} membres`);
-            }
-            
-            // Cercle de vigilance
+
+            // Zone de vigilance
             L.circle([-15.7167, 46.3167], {
                 radius: 1200,
                 color: '#f5c842',
-                fillColor: '#f5c842',
-                fillOpacity: 0.06,
+                fillColor: '#f5c84220',
+                fillOpacity: 0.1,
                 weight: 1.5,
-                dashArray: '6, 8'
+                dashArray: '6, 8',
             }).addTo(map).bindPopup('Zone de vigilance · Mahabibo');
-            
-            setTimeout(() => map.invalidateSize(), 300);
-            window.addEventListener('resize', () => setTimeout(() => map.invalidateSize(), 200));
-        }
 
-        // ============================================================
-        // GÉOLOCALISATION
-        // ============================================================
-        function getUserLocation() {
-            if (!navigator.geolocation) {
-                showToast('⚠️ GPS non disponible', 'error');
-                return;
-            }
-            
-            navigator.geolocation.getCurrentPosition(
-                pos => {
-                    userLat = pos.coords.latitude;
-                    userLng = pos.coords.longitude;
-                    updateUserPosition(userLat, userLng);
-                    showToast('📍 Position détectée', 'success');
-                },
-                err => {
-                    showToast('⚠️ Activez la géolocalisation', 'error');
-                },
-                { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
-            );
-        }
+            // =========================================================
+            // 4. MARQUEURS AVEC BELLES ICÔNES
+            // =========================================================
+            const markers = {};
+            const groupMarkers = {};
+            let userMarker = null;
+            let alertMarkers = [];
 
-        function updateUserPosition(lat, lng) {
-            userLat = lat;
-            userLng = lng;
-            
-            if (window._userMarker) map.removeLayer(window._userMarker);
-            
-            window._userMarker = L.circleMarker([lat, lng], {
-                radius: 7,
-                fillColor: '#27ae60',
-                color: '#fff',
-                weight: 2,
-                fillOpacity: 1
-            }).addTo(map).bindPopup('📍 Vous êtes ici').openPopup();
-            
-            map.setView([lat, lng], 16);
-            document.getElementById('currentCity').textContent = `Majunga · ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-        }
+            // Positions initiales des groupes
+            const groupPositions = {
+                B: { lat: -15.7280, lng: 46.3220, name: 'Groupe B', color: '#2ecc71', emoji: '🟢' },
+                C: { lat: -15.7100, lng: 46.3300, name: 'Groupe C', color: '#3498db', emoji: '🔵' },
+                police: { lat: -15.7200, lng: 46.3100, name: 'Police', color: '#f5c842', emoji: '🚔' },
+                gendarmerie: { lat: -15.7250, lng: 46.3250, name: 'Gendarmerie', color: '#8e44ad', emoji: '⭐' }
+            };
 
-        // ============================================================
-        // TOAST
-        // ============================================================
-        let toastTimeout;
-        function showToast(msg, type = 'info') {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.className = 'toast show ' + type;
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => t.className = 'toast', 3000);
-        }
+            // Créer les marqueurs avec de belles icônes
+            function createGroupMarkers() {
+                for (const [key, pos] of Object.entries(groupPositions)) {
+                    const icon = L.divIcon({
+                        className: 'custom-marker',
+                        html: `
+                            <div style="
+                                background:${pos.color};
+                                width:34px;height:34px;
+                                border-radius:50% 50% 50% 0;
+                                transform:rotate(-45deg);
+                                display:flex;align-items:center;justify-content:center;
+                                border:2px solid #fff;
+                                box-shadow:0 4px 15px rgba(0,0,0,0.5);
+                                font-size:18px;
+                            "><span style="transform:rotate(45deg);">${pos.emoji}</span></div>
+                            <div style="
+                                background:rgba(0,0,0,0.8);
+                                color:#fff;
+                                font-size:9px;
+                                font-weight:700;
+                                padding:2px 6px;
+                                border-radius:3px;
+                                margin-top:2px;
+                                text-align:center;
+                                white-space:nowrap;
+                            ">${pos.name}</div>
+                        `,
+                        iconSize: [38, 50],
+                        iconAnchor: [19, 50],
+                        popupAnchor: [0, -50]
+                    });
 
-        // ============================================================
-        // MESSAGES TALKIE
-        // ============================================================
-        function addTwMessage(who, text, cls) {
-            const container = document.getElementById('twMessages');
-            const div = document.createElement('div');
-            div.className = 'tw-msg';
-            const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-            div.innerHTML = `<span class="who ${cls || ''}">${who}</span> <span class="time">${time}</span> — ${text}`;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-            while (container.children.length > 50) container.removeChild(container.firstChild);
-        }
-
-        function simulateOtherMessage() {
-            const msgs = [
-                { who: 'Groupe B', cls: 'g2', text: 'Rondes OK · secteur sud' },
-                { who: 'Groupe C', cls: 'g3', text: 'Présence normale · marché' },
-                { who: 'Groupe B', cls: 'g2', text: 'On se déplace vers le nord' },
-            ];
-            const r = msgs[Math.floor(Math.random() * msgs.length)];
-            addTwMessage(r.who, r.text, r.cls);
-        }
-
-        // ============================================================
-        // ALERTE SUR LA CARTE
-        // ============================================================
-        function addAlertMarkerOnMap(lat, lng, group) {
-            const alertIcon = L.divIcon({
-                className: 'alert-marker',
-                html: '🚨<span class="label">ALERTE</span>',
-                iconSize: [35, 35],
-                iconAnchor: [17, 35]
-            });
-            
-            const marker = L.marker([lat, lng], { icon: alertIcon }).addTo(map);
-            marker.bindPopup(`
-                <b>🚨 ALERTE KIDNAPPING</b><br>
-                📍 ${lat.toFixed(5)}, ${lng.toFixed(5)}<br>
-                👥 Groupe ${group}<br>
-                🕐 ${new Date().toLocaleTimeString()}
-            `).openPopup();
-            
-            // Cercle pulsant
-            const circle = L.circle([lat, lng], {
-                radius: 50,
-                color: '#e74c3c',
-                fillColor: '#e74c3c',
-                fillOpacity: 0.2,
-                weight: 2
-            }).addTo(map);
-            
-            let radius = 50;
-            const interval = setInterval(() => {
-                radius += 20;
-                circle.setRadius(radius);
-                circle.setStyle({
-                    fillOpacity: Math.max(0, 0.2 - (radius / 600)),
-                    weight: Math.max(0.5, 2 - (radius / 300))
-                });
-                if (radius > 600) {
-                    clearInterval(interval);
-                    map.removeLayer(circle);
+                    groupMarkers[key] = L.marker([pos.lat, pos.lng], { icon })
+                        .addTo(map)
+                        .bindPopup(`<b>${pos.name}</b><br>📍 ${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)}<br>✅ En service`);
                 }
-            }, 100);
-            
-            map.setView([lat, lng], 15);
-            addTwMessage('🚨 ALERTE', `📍 Signalée à ${lat.toFixed(4)}, ${lng.toFixed(4)} (Groupe ${group})`, 'alert');
-            showToast('🚨 ALERTE positionnée !', 'error');
-        }
+            }
 
-        // ============================================================
-        // BOUTON ALERTE
-        // ============================================================
-        document.getElementById('btnAlert').addEventListener('click', function() {
-            if (alertActive) {
-                showToast('⚠️ Alerte déjà en cours', 'error');
-                return;
-            }
-            if (!userLat || !userLng) {
-                showToast('⚠️ Position GPS non disponible', 'error');
-                getUserLocation();
-                return;
-            }
-            
-            alertActive = true;
-            this.disabled = true;
-            this.innerHTML = '🚨 ALERTE EN COURS... <span class="sub">⏳ Intervention</span>';
-            
-            addAlertMarkerOnMap(userLat, userLng, currentGroup);
-            
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 100]);
-            
-            setTimeout(() => addTwMessage('Groupe B', '✅ Reçu ! Intervention en cours', 'g2'), 1500);
-            setTimeout(() => addTwMessage('Groupe C', '✅ On se rapproche !', 'g3'), 2500);
-            setTimeout(() => addTwMessage('🔄 Système', '📡 Gendarmes & Police notifiés (17 · 112)', 'system'), 3500);
-            
-            setTimeout(() => {
-                alertActive = false;
-                this.disabled = false;
-                this.innerHTML = '🚨 ALERTE KIDNAPPING <span class="sub">⚠️ Tous les groupes & forces de l\'ordre</span>';
-                showToast('✅ Alerte terminée', 'success');
-            }, 20000);
-        });
+            createGroupMarkers();
 
-        // ============================================================
-        // PEERJS (AUDIO)
-        // ============================================================
-        function initPeerJS() {
-            let storedId;
-            try { storedId = localStorage.getItem('fokon_peer_id'); } catch(e) { storedId = null; }
-            if (!storedId) {
-                storedId = 'tw_' + Math.random().toString(36).substr(2, 8);
-                try { localStorage.setItem('fokon_peer_id', storedId); } catch(e) {}
+            // =========================================================
+            // 5. SIMULATION DÉPLACEMENT TEMPS RÉEL
+            // =========================================================
+            function simulateGroupMovement() {
+                // Groupe B se déplace
+                if (groupMarkers['B']) {
+                    groupPositions.B.lat += (Math.random() - 0.5) * 0.002;
+                    groupPositions.B.lng += (Math.random() - 0.5) * 0.002;
+                    groupMarkers['B'].setLatLng([groupPositions.B.lat, groupPositions.B.lng]);
+                    // Mettre à jour le popup
+                    groupMarkers['B'].setPopupContent(`<b>Groupe B</b><br>📍 ${groupPositions.B.lat.toFixed(4)}, ${groupPositions.B.lng.toFixed(4)}<br>✅ En patrouille`);
+                }
+                // Groupe C se déplace
+                if (groupMarkers['C']) {
+                    groupPositions.C.lat += (Math.random() - 0.5) * 0.0015;
+                    groupPositions.C.lng += (Math.random() - 0.5) * 0.0015;
+                    groupMarkers['C'].setLatLng([groupPositions.C.lat, groupPositions.C.lng]);
+                }
+                // Police se déplace
+                if (groupMarkers['police']) {
+                    groupPositions.police.lat += (Math.random() - 0.5) * 0.001;
+                    groupPositions.police.lng += (Math.random() - 0.5) * 0.001;
+                    groupMarkers['police'].setLatLng([groupPositions.police.lat, groupPositions.police.lng]);
+                }
             }
-            peerId = storedId;
-            
-            try {
+
+            setInterval(simulateGroupMovement, 2000);
+
+            // =========================================================
+            // 6. GÉOLOCALISATION
+            // =========================================================
+            function updateUserPosition(lat, lng) {
+                userLat = lat;
+                userLng = lng;
+
+                if (userMarker) {
+                    map.removeLayer(userMarker);
+                }
+
+                // Icône utilisateur bien visible
+                const userIcon = L.divIcon({
+                    className: 'user-marker',
+                    html: `
+                        <div style="
+                            background:#e74c3c;
+                            width:40px;height:40px;
+                            border-radius:50% 50% 50% 0;
+                            transform:rotate(-45deg);
+                            display:flex;align-items:center;justify-content:center;
+                            border:3px solid #fff;
+                            box-shadow:0 4px 20px rgba(231,76,60,0.8);
+                            font-size:20px;
+                            animation: pulse 1.5s infinite;
+                        "><span style="transform:rotate(45deg);">📍</span></div>
+                        <div style="
+                            background:rgba(0,0,0,0.85);
+                            color:#fff;
+                            font-size:10px;
+                            font-weight:700;
+                            padding:3px 8px;
+                            border-radius:4px;
+                            margin-top:2px;
+                            text-align:center;
+                            white-space:nowrap;
+                            border:1px solid #e74c3c;
+                        ">VOUS · Groupe ${currentGroup}</div>
+                    `,
+                    iconSize: [44, 58],
+                    iconAnchor: [22, 58],
+                    popupAnchor: [0, -58]
+                });
+
+                userMarker = L.marker([lat, lng], { icon: userIcon })
+                    .addTo(map)
+                    .bindPopup(`<b style="color:#e74c3c;">📍 Votre position</b><br>Groupe ${currentGroup}<br>${lat.toFixed(5)}, ${lng.toFixed(5)}`)
+                    .openPopup();
+
+                map.setView([lat, lng], 16);
+                document.getElementById('currentCity').textContent = `Majunga · ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+
+                // Envoyer la position à Firebase
+                if (useFirebase && db) {
+                    db.ref('positions/' + getUserId()).set({
+                        lat: lat,
+                        lng: lng,
+                        group: currentGroup,
+                        timestamp: Date.now()
+                    });
+                }
+            }
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(pos) {
+                        updateUserPosition(pos.coords.latitude, pos.coords.longitude);
+                        showToast('📍 Position GPS détectée', 'success');
+                    },
+                    function() {
+                        showToast('⚠️ Activez la géolocalisation', 'error');
+                        // Position par défaut
+                        updateUserPosition(-15.7167, 46.3167);
+                    },
+                    { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
+                );
+
+                // Suivre les mouvements
+                navigator.geolocation.watchPosition(
+                    function(pos) {
+                        updateUserPosition(pos.coords.latitude, pos.coords.longitude);
+                    },
+                    function() {},
+                    { enableHighAccuracy: true, maximumAge: 10000 }
+                );
+            }
+
+            // =========================================================
+            // 7. IDENTIFIANT UNIQUE
+            // =========================================================
+            function getUserId() {
+                let id = localStorage.getItem('fokon_user_id');
+                if (!id) {
+                    id = 'user_' + Math.random().toString(36).substr(2, 9);
+                    localStorage.setItem('fokon_user_id', id);
+                }
+                return id;
+            }
+
+            // =========================================================
+            // 8. TOAST
+            // =========================================================
+            function showToast(msg, type) {
+                const t = document.getElementById('toast');
+                t.textContent = msg;
+                t.className = 'toast show ' + (type || 'info');
+                clearTimeout(t._hide);
+                t._hide = setTimeout(() => { t.className = 'toast'; }, 4000);
+            }
+            window.showToast = showToast;
+
+            // =========================================================
+            // 9. MESSAGES TALKIE
+            // =========================================================
+            const twMessages = document.getElementById('twMessages');
+            let listenInterval = null;
+
+            function addTwMessage(who, text, cls) {
+                const div = document.createElement('div');
+                div.className = 'tw-msg';
+                const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                div.innerHTML = `<span class="who ${cls || ''}">${who}</span> <span class="time">${time}</span> — ${text}`;
+                twMessages.appendChild(div);
+                twMessages.scrollTop = twMessages.scrollHeight;
+                while (twMessages.children.length > 50) {
+                    twMessages.removeChild(twMessages.firstChild);
+                }
+
+                if (useFirebase && db) {
+                    db.ref('messages').push({
+                        who: who,
+                        text: text,
+                        cls: cls || '',
+                        timestamp: Date.now(),
+                        userId: getUserId(),
+                        group: currentGroup
+                    });
+                }
+            }
+            window.addTwMessage = addTwMessage;
+
+            // Écouter Firebase
+            if (useFirebase && db) {
+                db.ref('messages').limitToLast(10).on('child_added', function(snapshot) {
+                    const data = snapshot.val();
+                    if (data.userId !== getUserId()) {
+                        addTwMessage(data.who, data.text, data.cls);
+                    }
+                });
+
+                db.ref('alerts').on('child_added', function(snapshot) {
+                    const data = snapshot.val();
+                    if (data.userId !== getUserId() && data.lat && data.lng) {
+                        addAlertMarkerOnMap(data.lat, data.lng, data.group || '?');
+                    }
+                });
+            }
+
+            function simulateOtherMessage() {
+                const msgs = [
+                    { who: 'Groupe B', cls: 'g2', text: 'Rondes OK · secteur sud' },
+                    { who: 'Groupe C', cls: 'g3', text: 'Présence normale · marché' },
+                    { who: 'Groupe B', cls: 'g2', text: 'On se déplace vers le nord' },
+                    { who: 'Groupe C', cls: 'g3', text: '⚠️ Véhicule suspect · on surveille' },
+                ];
+                const r = msgs[Math.floor(Math.random() * msgs.length)];
+                addTwMessage(r.who, r.text, r.cls);
+            }
+
+            // =========================================================
+            // 10. ALERTE SUR LA CARTE
+            // =========================================================
+            function addAlertMarkerOnMap(lat, lng, group) {
+                const alertIcon = L.divIcon({
+                    className: 'alert-marker',
+                    html: '🚨<span class="label">ALERTE</span>',
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 40]
+                });
+
+                const marker = L.marker([lat, lng], { icon: alertIcon }).addTo(map);
+                marker.bindPopup(`
+                    <b>🚨 ALERTE KIDNAPPING</b><br>
+                    📍 Position: ${lat.toFixed(5)}, ${lng.toFixed(5)}<br>
+                    👥 Groupe: ${group || '?'}<br>
+                    🕐 Signalée à: ${new Date().toLocaleTimeString()}<br>
+                    <span style="color:#e74c3c;font-weight:700;">⚠️ INTERVENTION EN COURS</span>
+                `).openPopup();
+
+                const circle = L.circle([lat, lng], {
+                    radius: 50,
+                    color: '#e74c3c',
+                    fillColor: '#e74c3c',
+                    fillOpacity: 0.3,
+                    weight: 2,
+                    className: 'alert-circle'
+                }).addTo(map);
+
+                let radius = 50;
+                const growInterval = setInterval(() => {
+                    radius += 15;
+                    circle.setRadius(radius);
+                    circle.setStyle({
+                        fillOpacity: Math.max(0, 0.3 - (radius / 500)),
+                        weight: Math.max(0.5, 2 - (radius / 200))
+                    });
+                    if (radius > 500) {
+                        clearInterval(growInterval);
+                        map.removeLayer(circle);
+                    }
+                }, 100);
+
+                map.setView([lat, lng], 15);
+                alertMarkers.push({ marker, circle, interval: growInterval });
+                addTwMessage('🚨 ALERTE', `📍 Alerte signalée à ${lat.toFixed(4)}, ${lng.toFixed(4)} (Groupe ${group || '?'})`, 'alert');
+                showToast(`🚨 ALERTE positionnée sur la carte !`, 'error');
+            }
+
+            // =========================================================
+            // 11. BOUTON ALERTE KIDNAPPING
+            // =========================================================
+            const btnAlert = document.getElementById('btnAlert');
+            let alertActive = false;
+
+            btnAlert.addEventListener('click', function() {
+                if (alertActive) {
+                    showToast('⚠️ Alerte déjà en cours', 'error');
+                    return;
+                }
+
+                if (!userLat || !userLng) {
+                    showToast('⚠️ Position GPS non disponible. Activez la géolocalisation.', 'error');
+                    return;
+                }
+
+                alertActive = true;
+                this.disabled = true;
+                this.innerHTML = '🚨 ALERTE EN COURS... <span class="sub">⏳ Intervention</span>';
+
+                addAlertMarkerOnMap(userLat, userLng, currentGroup);
+                addTwMessage('🚨 ALERTE', `🔴 KIDNAPPING · Secteur Mahabibo (Groupe ${currentGroup})`, 'alert');
+                showToast('🚨 ALERTE KIDNAPPING ! Position envoyée à tous', 'error');
+
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 500]);
+
+                setTimeout(() => addTwMessage('Groupe B', '✅ Reçu ! Intervention en cours', 'g2'), 1500);
+                setTimeout(() => addTwMessage('Groupe C', '✅ On se rapproche !', 'g3'), 2500);
+                setTimeout(() => addTwMessage('🔄 Système', '📡 Gendarmes & Police notifiés (17 · 112)', 'system'), 3500);
+
+                if (useFirebase && db) {
+                    db.ref('alerts').push({
+                        type: 'kidnapping',
+                        lat: userLat,
+                        lng: userLng,
+                        location: 'Mahabibo',
+                        group: currentGroup,
+                        userId: getUserId(),
+                        timestamp: Date.now(),
+                        active: true
+                    });
+                }
+
+                setTimeout(() => {
+                    alertActive = false;
+                    btnAlert.disabled = false;
+                    btnAlert.innerHTML = '🚨 ALERTE KIDNAPPING <span class="sub">⚠️ Tous les groupes & forces de l\'ordre</span>';
+                    showToast('✅ Alerte terminée', 'success');
+                    addTwMessage('🔄 Système', '✅ Fin d\'alerte · Restez vigilants', 'system');
+                }, 20000);
+            });
+
+            // =========================================================
+            // 12. AUDIO PEERJS
+            // =========================================================
+            let peer = null;
+            let currentCall = null;
+            let localStream = null;
+            let isCallActive = false;
+            let peerId = '';
+
+            function getPeerId() {
+                let id = localStorage.getItem('fokon_peer_id');
+                if (!id) {
+                    id = 'tw_' + Math.random().toString(36).substr(2, 8);
+                    localStorage.setItem('fokon_peer_id', id);
+                }
+                return id;
+            }
+
+            function initPeerJS() {
+                peerId = getPeerId();
+
                 peer = new Peer(peerId, {
                     config: {
                         iceServers: [
                             { urls: 'stun:stun.l.google.com:19302' },
                             { urls: 'stun:stun1.l.google.com:19302' }
                         ]
-                    },
-                    debug: 0
+                    }
                 });
-                
-                peer.on('open', id => {
-                    document.getElementById('twChannel').textContent = '🔓 ' + id.substring(0, 8);
-                    document.getElementById('connectionStatus').textContent = '🔊 Audio prêt';
-                    showToast('🔊 Talkie-Walkie prêt', 'success');
-                    addTwMessage('🔄 Système', '🎙️ ID: ' + id.substring(0, 8), 'system');
+
+                peer.on('open', (id) => {
+                    console.log('🔊 PeerJS connecté avec ID:', id);
+                    document.getElementById('twChannel').textContent = '🔓 ID: ' + id;
+                    document.getElementById('twStatus').textContent = `🎙️ Prêt · ID: ${id}`;
+                    showToast('🔊 Talkie-Walkie prêt !', 'success');
+                    addTwMessage('🔄 Système', `🎙️ Votre ID: ${id}`, 'system');
                 });
-                
-                peer.on('call', call => {
-                    addTwMessage('📞 Appel', 'Appel entrant de ' + call.peer, 'system');
-                    showToast('📞 Appel entrant', 'info');
-                    
+
+                peer.on('call', (call) => {
+                    addTwMessage('📞 Appel', `Appel entrant de ${call.peer}`, 'system');
+                    showToast(`📞 Appel de ${call.peer}`, 'info');
+
                     navigator.mediaDevices.getUserMedia({
                         audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 }
                     })
-                    .then(stream => {
+                    .then((stream) => {
                         localStream = stream;
                         call.answer(stream);
                         startCall(call);
                     })
-                    .catch(() => showToast('❌ Micro indisponible', 'error'));
+                    .catch((err) => {
+                        showToast('⚠️ Erreur micro: ' + err.message, 'error');
+                    });
                 });
-                
-                peer.on('error', err => {
+
+                peer.on('error', (err) => {
+                    console.error('Erreur PeerJS:', err);
                     if (err.message.includes('ID')) {
-                        try { localStorage.removeItem('fokon_peer_id'); } catch(e) {}
+                        localStorage.removeItem('fokon_peer_id');
+                        setTimeout(() => location.reload(), 1000);
                     }
                 });
-                
-            } catch(e) {
-                console.warn('PeerJS non disponible');
-            }
-        }
-        
-        function startCall(call) {
-            currentCall = call;
-            isCallActive = true;
-            document.getElementById('twSpeak').disabled = true;
-            document.getElementById('twListen').disabled = true;
-            document.getElementById('twStop').disabled = false;
-            document.getElementById('audioIndicator').className = 'audio-indicator active';
-            document.getElementById('twStatus').textContent = '🔊 En communication';
-            
-            call.on('stream', () => addTwMessage('🎧 Audio', 'Flux audio reçu', 'system'));
-            call.on('close', () => endCall('🔚 Fin de communication'));
-            call.on('error', () => endCall('❌ Erreur'));
-        }
-        
-        function endCall(reason) {
-            if (currentCall) { currentCall.close(); currentCall = null; }
-            if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-            isCallActive = false;
-            document.getElementById('twSpeak').disabled = false;
-            document.getElementById('twListen').disabled = false;
-            document.getElementById('twStop').disabled = true;
-            document.getElementById('audioIndicator').className = 'audio-indicator';
-            document.getElementById('twStatus').textContent = '🔗 Prêt';
-            if (reason) addTwMessage('🔄 Système', reason, 'system');
-        }
 
-        // ============================================================
-        // BOUTONS TALKIE
-        // ============================================================
-        document.getElementById('twSpeak').addEventListener('click', function() {
-            if (isCallActive) { showToast('⚠️ Déjà en communication', 'error'); return; }
-            if (!isOnline) {
-                // Mode simulation
+                peer.on('disconnected', () => {
+                    document.getElementById('twStatus').textContent = '⚠️ Déconnecté du serveur';
+                });
+            }
+
+            function startCall(call) {
+                currentCall = call;
+                isCallActive = true;
+                document.getElementById('twSpeak').disabled = true;
+                document.getElementById('twListen').disabled = true;
+                document.getElementById('twStop').disabled = false;
+                document.getElementById('twStatus').textContent = '🔊 En communication';
+                document.getElementById('audioIndicator').className = 'audio-indicator active';
+                addTwMessage('🔊 Communication', 'Appel établi', 'system');
+                showToast('🔊 En communication !', 'success');
+
+                call.on('stream', (stream) => {
+                    const audio = new Audio();
+                    audio.srcObject = stream;
+                    audio.play().catch(e => {
+                        showToast('🔊 Cliquez pour activer le son', 'info');
+                    });
+                    addTwMessage('🎧 Audio', 'Flux audio reçu', 'system');
+
+                    // Animation audio wave
+                    const audioCtx = new AudioContext();
+                    const source = audioCtx.createMediaStreamSource(stream);
+                    const analyser = audioCtx.createAnalyser();
+                    analyser.fftSize = 256;
+                    source.connect(analyser);
+                    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+                    function animateAudio() {
+                        if (!isCallActive) return;
+                        analyser.getByteFrequencyData(dataArray);
+                        let sum = 0;
+                        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+                        const avg = sum / dataArray.length;
+                        updateAudioWave(Math.min(1, avg / 255 * 2));
+                        requestAnimationFrame(animateAudio);
+                    }
+                    animateAudio();
+                });
+
+                call.on('close', () => {
+                    endCall('🔚 L\'autre utilisateur a raccroché');
+                });
+
+                call.on('error', () => {
+                    endCall('❌ Erreur de communication');
+                });
+            }
+
+            function endCall(reason) {
+                if (currentCall) {
+                    currentCall.close();
+                    currentCall = null;
+                }
+                if (localStream) {
+                    localStream.getTracks().forEach(t => t.stop());
+                    localStream = null;
+                }
+                isCallActive = false;
+                document.getElementById('twSpeak').disabled = false;
+                document.getElementById('twListen').disabled = false;
+                document.getElementById('twStop').disabled = true;
+                document.getElementById('twStatus').textContent = '🔗 Déconnecté';
+                document.getElementById('audioIndicator').className = 'audio-indicator';
+                resetAudioWave();
+                if (reason) {
+                    addTwMessage('🔄 Système', reason, 'system');
+                    showToast(reason, 'info');
+                }
+            }
+
+            function updateAudioWave(level) {
+                const bars = document.querySelectorAll('.audio-wave span');
+                const h = Math.min(20, Math.max(4, level * 20));
+                bars.forEach((bar) => {
+                    bar.style.height = Math.max(4, h * (0.5 + Math.random() * 0.5)) + 'px';
+                    bar.classList.add('active');
+                });
+            }
+
+            function resetAudioWave() {
+                const bars = document.querySelectorAll('.audio-wave span');
+                const heights = [6, 12, 18, 10, 14];
+                bars.forEach((bar, i) => {
+                    bar.style.height = heights[i] + 'px';
+                    bar.classList.remove('active');
+                });
+            }
+
+            // =========================================================
+            // 13. BOUTONS TALKIE
+            // =========================================================
+            document.getElementById('twSpeak').addEventListener('click', function() {
+                if (isCallActive) {
+                    showToast('⚠️ Vous êtes déjà en communication', 'error');
+                    return;
+                }
+
+                if (!isOnline) {
+                    this.classList.add('recording');
+                    document.getElementById('audioIndicator').className = 'audio-indicator recording';
+                    document.getElementById('twStatus').textContent = '🔴 Simulation transmission...';
+                    addTwMessage('📢 Vous', 'Message vocal (simulation hors-ligne)', '');
+                    setTimeout(() => {
+                        this.classList.remove('recording');
+                        document.getElementById('audioIndicator').className = 'audio-indicator';
+                        document.getElementById('twStatus').textContent = '✅ Message envoyé (simulation)';
+                        showToast('✅ Message envoyé', 'success');
+                    }, 2000);
+                    return;
+                }
+
+                const targetId = prompt('Entrez l\'ID de l\'autre appareil:');
+                if (!targetId) return;
+                if (targetId === peerId) {
+                    showToast('⚠️ Vous ne pouvez pas vous appeler vous-même', 'error');
+                    return;
+                }
+
+                document.getElementById('twStatus').textContent = '📞 Appel en cours...';
+                this.disabled = true;
                 this.classList.add('recording');
-                document.getElementById('audioIndicator').className = 'audio-indicator recording';
-                addTwMessage('📢 Vous', 'Message vocal (simulation hors-ligne)', '');
-                setTimeout(() => {
+                addTwMessage('📞 Appel', 'Appel vers ' + targetId + '...', 'system');
+
+                navigator.mediaDevices.getUserMedia({
+                    audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 }
+                })
+                .then((stream) => {
+                    localStream = stream;
+                    const call = peer.call(targetId, stream);
+                    startCall(call);
+                })
+                .catch((err) => {
+                    showToast('❌ Erreur micro: ' + err.message, 'error');
+                    document.getElementById('twStatus').textContent = '❌ Micro indisponible';
+                    this.disabled = false;
                     this.classList.remove('recording');
-                    document.getElementById('audioIndicator').className = 'audio-indicator';
-                    showToast('✅ Message envoyé', 'success');
+                });
+            });
+
+            document.getElementById('twListen').addEventListener('click', function() {
+                if (this.classList.contains('listening')) {
+                    this.classList.remove('listening');
+                    this.textContent = '🎧 Écouter';
+                    if (listenInterval) {
+                        clearInterval(listenInterval);
+                        listenInterval = null;
+                    }
+                    document.getElementById('twStatus').textContent = '🔇 Écoute désactivée';
+                    showToast('🔇 Écoute désactivée', 'info');
+                } else {
+                    this.classList.add('listening');
+                    this.textContent = '⏹️ Écoute...';
+                    document.getElementById('twStatus').textContent = '🎧 Écoute active · Réception audio';
+                    showToast('🎧 Écoute active', 'success');
+
+                    listenInterval = setInterval(() => {
+                        if (this.classList.contains('listening')) {
+                            simulateOtherMessage();
+                        }
+                    }, 5000);
+                }
+            });
+
+            document.getElementById('twStop').addEventListener('click', function() {
+                if (isCallActive) {
+                    endCall('🔚 Vous avez raccroché');
+                }
+            });
+
+            document.getElementById('twClear').addEventListener('click', function() {
+                twMessages.innerHTML = '';
+                addTwMessage('🔄 Système', '🗑️ Messages effacés', 'system');
+            });
+
+            // =========================================================
+            // 14. ACTIONS DES GROUPES
+            // =========================================================
+            window.sendPosition = function(group) {
+                if (group === 'A') {
+                    if (userLat && userLng) {
+                        map.setView([userLat, userLng], 17);
+                        if (userMarker) userMarker.openPopup();
+                    }
+                } else if (groupMarkers[group]) {
+                    const pos = groupPositions[group];
+                    map.setView([pos.lat, pos.lng], 17);
+                    groupMarkers[group].openPopup();
+                }
+                showToast(`📍 Position du Groupe ${group} sur la carte`, 'info');
+                addTwMessage(`Groupe ${group}`, `📍 Position partagée`, group === 'B' ? 'g2' : group === 'C' ? 'g3' : '');
+            };
+
+            window.callGroup = function(group) {
+                showToast(`📡 Appel vocal vers le Groupe ${group}`, 'info');
+                addTwMessage(`🔄 Système`, `📡 Appel du Groupe ${group} en cours...`, 'system');
+                setTimeout(() => {
+                    addTwMessage(`Groupe ${group}`, `✅ Réponse du Groupe ${group}`, group === 'B' ? 'g2' : 'g3');
+                    showToast(`✅ Groupe ${group} a répondu`, 'success');
                 }, 2000);
-                return;
-            }
-            
-            const targetId = prompt('ID de l\'autre appareil:');
-            if (!targetId || targetId === peerId) return;
-            
-            this.disabled = true;
-            addTwMessage('📞 Appel', 'Appel vers ' + targetId + '...', 'system');
-            
-            navigator.mediaDevices.getUserMedia({
-                audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 }
-            })
-            .then(stream => {
-                localStream = stream;
-                const call = peer.call(targetId, stream);
-                startCall(call);
-            })
-            .catch(() => {
-                showToast('❌ Micro indisponible', 'error');
-                this.disabled = false;
+            };
+
+            // =========================================================
+            // 15. SÉLECTEUR DE GROUPE
+            // =========================================================
+            document.getElementById('groupSelector').addEventListener('change', function() {
+                currentGroup = this.value;
+
+                document.getElementById('groupABadge').textContent = currentGroup === 'A' ? 'vous' : '';
+
+                // Mettre à jour le marqueur utilisateur
+                if (userLat && userLng) {
+                    updateUserPosition(userLat, userLng);
+                }
+
+                showToast(`🔄 Vous êtes maintenant dans le Groupe ${currentGroup}`, 'info');
+                addTwMessage(`🔄 Système`, `👤 ${getUserId().substr(0, 6)} rejoint le Groupe ${currentGroup}`, 'system');
+
+                if (useFirebase && db) {
+                    db.ref('users/' + getUserId()).set({
+                        group: currentGroup,
+                        timestamp: Date.now()
+                    });
+                }
             });
-        });
-        
-        document.getElementById('twListen').addEventListener('click', function() {
-            if (isListening) {
-                isListening = false;
-                this.classList.remove('listening');
-                this.textContent = '🎧 Écouter';
-                if (listenInterval) { clearInterval(listenInterval); listenInterval = null; }
-                document.getElementById('twStatus').textContent = '🔇 Écoute désactivée';
-            } else {
-                isListening = true;
-                this.classList.add('listening');
-                this.textContent = '⏹️ Écoute...';
-                document.getElementById('twStatus').textContent = '🎧 Écoute active';
-                listenInterval = setInterval(() => {
-                    if (isListening) simulateOtherMessage();
-                }, 5000);
-            }
-        });
-        
-        document.getElementById('twStop').addEventListener('click', () => {
-            if (isCallActive) endCall('🔚 Vous avez raccroché');
-        });
-        
-        document.getElementById('twClear').addEventListener('click', () => {
-            document.getElementById('twMessages').innerHTML = '';
-            addTwMessage('🔄 Système', '🗑️ Historique effacé', 'system');
-        });
 
-        // ============================================================
-        // ACTIONS GROUPES
-        // ============================================================
-        window.sendPosition = function(group) {
-            if (markers[group]) {
-                map.setView(markers[group].getLatLng(), 17);
-                markers[group].openPopup();
-                showToast(`📍 Position Groupe ${group}`, 'info');
-            }
-        };
-        
-        window.callGroup = function(group) {
-            showToast(`📡 Appel Groupe ${group}`, 'info');
-            addTwMessage('🔄 Système', `📡 Appel Groupe ${group}...`, 'system');
-            setTimeout(() => {
-                addTwMessage(`Groupe ${group}`, '✅ Réponse reçue', group === 'B' ? 'g2' : 'g3');
-            }, 2000);
-        };
-
-        // ============================================================
-        // SÉLECTEUR DE GROUPE
-        // ============================================================
-        document.getElementById('groupSelector').addEventListener('change', function() {
-            currentGroup = this.value;
-            document.getElementById('groupABadge').textContent = currentGroup === 'A' ? 'vous' : '';
-            showToast(`🔄 Groupe ${currentGroup}`, 'info');
-            addTwMessage('🔄 Système', `👤 Passage au Groupe ${currentGroup}`, 'system');
-        });
-
-        // ============================================================
-        // INIT
-        // ============================================================
-        function initAll() {
-            getUserLocation();
-            
-            // Messages de démarrage
-            setTimeout(() => addTwMessage('🔄 Système', '🔰 FOKON\'ALERT prêt · 3 groupes', 'system'), 500);
-            setTimeout(() => addTwMessage('Groupe B', '✅ Patrouille en cours', 'g2'), 1500);
-            setTimeout(() => addTwMessage('Groupe C', '✅ Prêt · secteur est', 'g3'), 2500);
-            
-            // Simulation périodique des distances
-            setInterval(() => {
-                document.getElementById('patrolCount').textContent = Math.floor(Math.random() * 4 + 2);
-                document.getElementById('memberCount').textContent = Math.floor(Math.random() * 10 + 10);
-            }, 30000);
-            
-            // Raccourcis clavier
-            document.addEventListener('keydown', e => {
-                if (e.altKey && e.key === 'a') { e.preventDefault(); document.getElementById('btnAlert').click(); }
+            // =========================================================
+            // 16. RACCOURCIS CLAVIER
+            // =========================================================
+            document.addEventListener('keydown', function(e) {
+                if (e.altKey && e.key === 'a') { e.preventDefault();
+                    btnAlert.click(); }
+                if (e.altKey && e.key === 'l') { e.preventDefault();
+                    document.getElementById('twListen').click(); }
+                if (e.altKey && e.key === 'p') { e.preventDefault();
+                    document.getElementById('twSpeak').click(); }
+                if (e.altKey && e.key === 's') { e.preventDefault();
+                    document.getElementById('twStop').click(); }
             });
-            
-            console.log('🛡️ FOKON\'ALERT prêt !');
-            console.log('📱 Optimisé pour tous les téléphones');
-            console.log('📡 Fonctionne sur EDGE/3G/4G');
-        }
 
-        // Démarrer
-        initApp();
+            // =========================================================
+            // 17. INITIALISATION
+            // =========================================================
+            function init() {
+                initPeerJS();
+
+                // Simulation des compteurs
+                setInterval(() => {
+                    document.getElementById('patrolCount').textContent = Math.floor(Math.random() * 4 + 2);
+                    document.getElementById('memberCount').textContent = Math.floor(Math.random() * 10 + 10);
+                }, 30000);
+
+                // Messages de démarrage
+                setTimeout(() => {
+                    addTwMessage('🔄 Système', '🔰 FOKON\'ALERT prêt · 3 groupes connectés', 'system');
+                }, 500);
+                setTimeout(() => {
+                    addTwMessage('Groupe B', '✅ Patrouille en cours', 'g2');
+                }, 1500);
+                setTimeout(() => {
+                    addTwMessage('Groupe C', '✅ Prêt · secteur est', 'g3');
+                }, 2500);
+
+                console.log('🛡️ FOKON\'ALERT prêt !');
+                console.log('📡 Mode:', useFirebase ? '🔥 Multi-utilisateur' : '📡 Local');
+                console.log('👤 ID:', getUserId());
+                console.log('🎤 ID PeerJS:', peerId);
+                console.log('👥 Groupes en déplacement temps réel');
+                console.log('💡 Raccourcis: Alt+A (alerte) Alt+L (écouter) Alt+P (parler) Alt+S (stop)');
+            }
+
+            init();
+
+        })();
     </script>
+
 </body>
 </html>
