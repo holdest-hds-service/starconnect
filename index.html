@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
     <meta name="theme-color" content="#0b1725" />
-    <title>FOKON'ALERT — 3D Madagascar</title>
+    <title>FOKON'ALERT — Talkie-Walkie Réaliste</title>
 
-    <!-- Mapbox GL -->
-    <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.css" rel="stylesheet" />
-    <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.js"></script>
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -19,11 +19,7 @@
 
     <style>
         /* ===== STYLES COMPLETS ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
             background: #0b1725;
@@ -34,7 +30,7 @@
             -webkit-user-select: none;
             user-select: none;
         }
-
+        
         .offline-bar {
             background: #e67e22;
             color: #fff;
@@ -47,9 +43,7 @@
             top: 0;
             z-index: 1100;
         }
-        .offline-bar.show {
-            display: block;
-        }
+        .offline-bar.show { display: block; }
 
         .header {
             background: linear-gradient(135deg, #0a1e32, #143a57);
@@ -64,13 +58,8 @@
             flex-wrap: wrap;
             gap: 8px;
         }
-        .header .logo {
-            font-size: 1.2rem;
-            font-weight: 800;
-        }
-        .header .logo span {
-            color: #f5c842;
-        }
+        .header .logo { font-size: 1.2rem; font-weight: 800; }
+        .header .logo span { color: #f5c842; }
         .header .status {
             display: flex;
             align-items: center;
@@ -78,21 +67,12 @@
             font-size: 0.7rem;
         }
         .header .status .dot {
-            width: 8px;
-            height: 8px;
+            width: 8px; height: 8px;
             background: #5dffa0;
             border-radius: 50%;
             animation: pulse 2s infinite;
         }
-        @keyframes pulse {
-            0%,
-            100% {
-                opacity: 1
-            }
-            50% {
-                opacity: .3
-            }
-        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
         .header .user-badge {
             background: #1a3a55;
             padding: 4px 14px;
@@ -112,10 +92,7 @@
             cursor: pointer;
             font-family: inherit;
         }
-        .header .user-badge select option {
-            background: #0b1725;
-            color: #fff;
-        }
+        .header .user-badge select option { background: #0b1725; color: #fff; }
         .btn-logout {
             background: transparent;
             border: 1px solid #e74c3c;
@@ -138,20 +115,14 @@
             font-size: 0.8rem;
             border-bottom: 1px solid #1a3a55;
         }
-        .loc-bar .city {
-            color: #f5c842;
-            font-weight: 700;
-        }
+        .loc-bar .city { color: #f5c842; font-weight: 700; }
         .loc-bar .stats {
             display: flex;
             gap: 16px;
             font-size: 0.7rem;
             color: #8ab4d6;
         }
-        .loc-bar .stats .num {
-            color: #fff;
-            font-weight: 700;
-        }
+        .loc-bar .stats .num { color: #fff; font-weight: 700; }
 
         .map-wrapper {
             margin: 12px 16px;
@@ -159,159 +130,12 @@
             overflow: hidden;
             border: 2px solid #1a3a55;
             position: relative;
-            height: 340px;
         }
         #map {
+            height: 320px;
             width: 100%;
-            height: 100%;
+            min-height: 220px;
             background: #0a1520;
-            transition: filter 0.6s ease;
-        }
-
-        .map-controls {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .map-controls button {
-            background: rgba(10, 26, 42, 0.85);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 30px;
-            color: #fff;
-            padding: 6px 12px;
-            font-size: 0.55rem;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .map-controls button:hover {
-            background: rgba(255, 215, 0, 0.2);
-        }
-        .map-controls button.active {
-            background: #e74c3c;
-            border-color: #e74c3c;
-        }
-
-        .theme-toggle {
-            position: absolute;
-            bottom: 12px;
-            right: 12px;
-            z-index: 10;
-            background: rgba(10, 26, 42, 0.85);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 30px;
-            padding: 6px 14px;
-            color: #fff;
-            font-size: 0.6rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-family: inherit;
-            transition: all 0.3s;
-        }
-        .theme-toggle.night {
-            background: rgba(10, 10, 30, 0.85);
-            border-color: rgba(255, 215, 0, 0.3);
-        }
-        .theme-toggle .toggle-track {
-            width: 32px;
-            height: 18px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            position: relative;
-            transition: all 0.3s;
-        }
-        .theme-toggle.night .toggle-track {
-            background: rgba(255, 215, 0, 0.2);
-        }
-        .theme-toggle .toggle-thumb {
-            width: 14px;
-            height: 14px;
-            background: white;
-            border-radius: 50%;
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            transition: all 0.3s;
-        }
-        .theme-toggle.night .toggle-thumb {
-            left: 16px;
-            background: #ffd700;
-        }
-
-        .map-legend {
-            position: absolute;
-            bottom: 12px;
-            left: 12px;
-            z-index: 10;
-            background: rgba(10, 26, 42, 0.85);
-            backdrop-filter: blur(10px);
-            border-radius: 8px;
-            padding: 4px 10px;
-            font-size: 0.45rem;
-            color: #8ab4d6;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            pointer-events: none;
-        }
-        .map-legend .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin: 1px 0;
-        }
-        .legend-dot {
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .city-zoom {
-            position: absolute;
-            bottom: 55px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10;
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
-            padding: 4px 8px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            max-width: 92%;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-        }
-        .city-zoom button {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            color: #fff;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.5rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-            white-space: nowrap;
-        }
-        .city-zoom button:hover {
-            background: rgba(255, 215, 0, 0.2);
         }
 
         .section-title {
@@ -340,23 +164,10 @@
             cursor: pointer;
             transition: transform 0.1s;
         }
-        .group-card:active {
-            transform: scale(0.97);
-        }
-        .group-card .g-name {
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-        .group-card .g-status {
-            font-size: 0.65rem;
-            color: #8ab4d6;
-            margin-top: 2px;
-        }
-        .group-card .g-members {
-            font-size: 0.6rem;
-            color: #5a7f9e;
-            margin-top: 4px;
-        }
+        .group-card:active { transform: scale(0.97); }
+        .group-card .g-name { font-weight: 700; font-size: 0.9rem; }
+        .group-card .g-status { font-size: 0.65rem; color: #8ab4d6; margin-top: 2px; }
+        .group-card .g-members { font-size: 0.6rem; color: #5a7f9e; margin-top: 4px; }
         .group-card .g-actions {
             margin-top: 8px;
             display: flex;
@@ -364,8 +175,8 @@
             flex-wrap: wrap;
         }
         .group-card .g-actions button {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.08);
             color: #b6cdff;
             padding: 3px 12px;
             border-radius: 30px;
@@ -375,36 +186,13 @@
             font-family: inherit;
             transition: background 0.2s;
         }
-        .group-card .g-actions button:hover {
-            background: rgba(255, 255, 255, 0.12);
-        }
-        .group-card .g-actions button.primary {
-            background: #f5c842;
-            color: #0b1725;
-            border-color: #f5c842;
-        }
-        .group-card .g-actions button.primary:hover {
-            background: #ffd966;
-        }
-        .group-card.locked {
-            opacity: 0.5;
-            border-left-color: #555 !important;
-        }
-        .group-card.active-group {
-            border-left-color: #ffd700;
-            background: #1a3a55;
-        }
-        .group-card .g-badge {
-            font-size: 0.5rem;
-            background: rgba(255, 215, 0, 0.2);
-            padding: 0 8px;
-            border-radius: 20px;
-            margin-left: 4px;
-        }
+        .group-card .g-actions button:hover { background: rgba(255,255,255,0.12); }
+        .group-card .g-actions button.primary { background: #f5c842; color: #0b1725; border-color: #f5c842; }
+        .group-card .g-actions button.primary:hover { background: #ffd966; }
+        .group-card.locked { opacity: 0.5; border-left-color: #555 !important; }
+        .locked-label { font-size: 0.45rem; color: #e74c3c; margin-top: 2px; }
 
-        .alert-zone {
-            padding: 10px 16px;
-        }
+        .alert-zone { padding: 10px 16px; }
         .btn-alert {
             width: 100%;
             padding: 16px;
@@ -420,21 +208,9 @@
             font-family: inherit;
             transition: all 0.08s;
         }
-        .btn-alert:active {
-            transform: translateY(4px);
-            box-shadow: 0 1px 0 #78281f;
-        }
-        .btn-alert:disabled {
-            opacity: 0.5;
-            transform: translateY(3px);
-            pointer-events: none;
-        }
-        .btn-alert .sub {
-            display: block;
-            font-size: 0.5rem;
-            font-weight: 400;
-            opacity: 0.8;
-        }
+        .btn-alert:active { transform: translateY(4px); box-shadow: 0 1px 0 #78281f; }
+        .btn-alert:disabled { opacity: 0.5; transform: translateY(3px); pointer-events: none; }
+        .btn-alert .sub { display: block; font-size: 0.5rem; font-weight: 400; opacity: 0.8; }
 
         .tw-section {
             background: #0d2236;
@@ -458,20 +234,13 @@
         }
         .tw-header .tw-title .audio-indicator {
             display: inline-block;
-            width: 10px;
-            height: 10px;
+            width: 10px; height: 10px;
             border-radius: 50%;
             background: #4a6a88;
             transition: background 0.3s;
         }
-        .tw-header .tw-title .audio-indicator.active {
-            background: #2ecc71;
-            animation: pulse 1s infinite;
-        }
-        .tw-header .tw-title .audio-indicator.recording {
-            background: #e74c3c;
-            animation: pulse 0.5s infinite;
-        }
+        .tw-header .tw-title .audio-indicator.active { background: #2ecc71; animation: pulse 1s infinite; }
+        .tw-header .tw-title .audio-indicator.recording { background: #e74c3c; animation: pulse 0.5s infinite; }
         .tw-header .tw-channel {
             background: #1a3a55;
             padding: 3px 14px;
@@ -489,45 +258,21 @@
             line-height: 1.6;
             margin-bottom: 10px;
         }
-        .tw-messages::-webkit-scrollbar {
-            width: 2px;
-        }
-        .tw-messages::-webkit-scrollbar-thumb {
-            background: #f5c842;
-            border-radius: 10px;
-        }
+        .tw-messages::-webkit-scrollbar { width: 2px; }
+        .tw-messages::-webkit-scrollbar-thumb { background: #f5c842; border-radius: 10px; }
         .tw-msg {
             padding: 2px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
         }
-        .tw-msg .who {
-            font-weight: 700;
-            color: #f5c842;
-        }
-        .tw-msg .who.gA {
-            color: #e74c3c;
-        }
-        .tw-msg .who.gB {
-            color: #2ecc71;
-        }
-        .tw-msg .who.gC {
-            color: #3498db;
-        }
-        .tw-msg .who.system {
-            color: #e67e22;
-        }
-        .tw-msg .who.alert {
-            color: #e74c3c;
-        }
-        .tw-msg .who.police {
-            color: #f5c842;
-        }
-        .tw-msg .who.gendarmerie {
-            color: #8e44ad;
-        }
-        .tw-msg .who.civil {
-            color: #3498db;
-        }
+        .tw-msg .who { font-weight: 700; color: #f5c842; }
+        .tw-msg .who.g2 { color: #2ecc71; }
+        .tw-msg .who.g3 { color: #5dade2; }
+        .tw-msg .who.system { color: #e67e22; }
+        .tw-msg .who.alert { color: #e74c3c; }
+        .tw-msg .who.police { color: #f5c842; }
+        .tw-msg .who.gendarmerie { color: #8e44ad; }
+        .tw-msg .who.civil { color: #3498db; }
+        .tw-msg .who.famille { color: #e91e63; }
         .tw-msg .time {
             color: #4a6a88;
             font-size: 0.55rem;
@@ -553,28 +298,12 @@
             font-family: inherit;
             transition: all 0.15s;
         }
-        .tw-controls button:active {
-            transform: scale(0.96);
-        }
-        .tw-controls button.record {
-            background: #c0392b;
-            color: #fff;
-        }
-        .tw-controls button.record.listening {
-            background: #1f8b4c;
-        }
-        .tw-controls button.record.recording {
-            background: #e74c3c;
-            animation: pulse 0.8s infinite;
-        }
-        .tw-controls button.secondary {
-            background: transparent;
-            border: 1px solid #1a3a55;
-        }
-        .tw-controls button:disabled {
-            opacity: 0.4;
-            pointer-events: none;
-        }
+        .tw-controls button:active { transform: scale(0.96); }
+        .tw-controls button.record { background: #c0392b; color: #fff; }
+        .tw-controls button.record.listening { background: #1f8b4c; }
+        .tw-controls button.record.recording { background: #e74c3c; animation: pulse 0.8s infinite; }
+        .tw-controls button.secondary { background: transparent; border: 1px solid #1a3a55; }
+        .tw-controls button:disabled { opacity: 0.4; pointer-events: none; }
         .tw-status {
             font-size: 0.55rem;
             color: #4a6a88;
@@ -597,9 +326,7 @@
             border-radius: 3px;
             transition: height 0.1s;
         }
-        .audio-wave span.active {
-            background: #2ecc71;
-        }
+        .audio-wave span.active { background: #2ecc71; }
 
         .toast {
             position: fixed;
@@ -611,35 +338,20 @@
             border-radius: 60px;
             font-weight: 600;
             font-size: 0.8rem;
-            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 12px 48px rgba(0,0,0,0.8);
             z-index: 9999;
             display: none;
             max-width: 92%;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255,255,255,0.08);
         }
-        .toast.show {
-            display: block;
-            animation: slideDown 0.4s ease;
-        }
-        .toast.error {
-            border-color: #e74c3c;
-        }
-        .toast.success {
-            border-color: #2ecc71;
-        }
-        .toast.info {
-            border-color: #3498db;
-        }
+        .toast.show { display: block; animation: slideDown 0.4s ease; }
+        .toast.error { border-color: #e74c3c; }
+        .toast.success { border-color: #2ecc71; }
+        .toast.info { border-color: #3498db; }
         @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
         .alert-marker {
@@ -649,124 +361,92 @@
             font-size: 28px;
             line-height: 28px;
             animation: alertPulse 1s infinite;
-            filter: drop-shadow(0 0 8px rgba(231, 76, 60, 0.8));
+            filter: drop-shadow(0 0 8px rgba(231,76,60,0.8));
         }
         .alert-marker .label {
             display: block;
             font-size: 10px;
             font-weight: 700;
             color: #e74c3c;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0,0,0,0.8);
             padding: 2px 8px;
             border-radius: 4px;
             margin-top: -4px;
             white-space: nowrap;
         }
-        @keyframes alertPulse {
-            0%,
-            100% {
-                transform: scale(1)
-            }
-            50% {
-                transform: scale(1.3)
-            }
+        @keyframes alertPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.3)} }
+        .alert-circle { animation:circlePulse 1.5s infinite; }
+        @keyframes circlePulse { 0%{opacity:0.8;r:50} 100%{opacity:0;r:200} }
+
+        .map-legend {
+            position: absolute;
+            bottom: 20px;
+            left: 10px;
+            z-index: 500;
+            background: rgba(10,26,42,0.9);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 0.5rem;
+            color: #8ab4d6;
+            border: 1px solid rgba(255,255,255,0.1);
+            pointer-events: none;
         }
-        .alert-circle {
-            animation: circlePulse 1.5s infinite;
+        .map-legend .legend-item { display:flex; align-items:center; gap:4px; margin:2px 0; }
+        .map-legend .legend-hidden { text-decoration: line-through; opacity: 0.4; }
+        .legend-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 3px;
+            border: 1px solid #fff;
         }
-        @keyframes circlePulse {
-            0% {
-                opacity: 0.8;
-                r: 50
-            }
-            100% {
-                opacity: 0;
-                r: 200
-            }
+
+        .visibility-banner {
+            padding: 4px 14px;
+            text-align: center;
+            font-size: 0.55rem;
+            border-bottom: 1px solid #1a3a55;
         }
+        .visibility-banner.civil { background: rgba(52,152,219,0.15); color: #3498db; }
+        .visibility-banner.force { background: rgba(245,200,66,0.1); color: #f5c842; }
+        .visibility-banner.volontaire { background: rgba(46,204,113,0.1); color: #2ecc71; }
 
         .position-toggle {
             position: absolute;
             top: 10px;
-            left: 10px;
-            z-index: 10;
-            background: rgba(10, 26, 42, 0.85);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            right: 10px;
+            z-index: 500;
+            background: rgba(10,26,42,0.9);
+            border: 1px solid rgba(255,255,255,0.2);
             border-radius: 25px;
-            padding: 4px 10px;
+            padding: 6px 12px;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
             cursor: pointer;
-            font-size: 0.5rem;
+            font-size: 0.55rem;
             font-weight: 600;
             color: #fff;
             transition: all 0.3s;
         }
-        .position-toggle.active {
-            background: #e74c3c;
-            border-color: #e74c3c;
-        }
+        .position-toggle.active { background: #e74c3c; border-color: #e74c3c; animation: pulse 1.5s infinite; }
         .position-toggle .toggle-dot {
-            width: 16px;
-            height: 16px;
+            width: 20px; height: 20px;
             border-radius: 50%;
             background: #555;
+            transition: background 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.5rem;
+            font-size: 0.6rem;
         }
-        .position-toggle.active .toggle-dot {
-            background: #fff;
-            color: #e74c3c;
-        }
+        .position-toggle.active .toggle-dot { background: #fff; color: #e74c3c; }
 
-        .custom-marker {
-            background: none;
-            border: none;
-        }
-        .custom-marker .marker-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .custom-marker .marker-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 50% 50% 50% 0;
-            transform: rotate(-45deg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #fff;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            font-size: 16px;
-        }
-        .custom-marker .marker-icon span {
-            transform: rotate(45deg);
-        }
-        .custom-marker .marker-label {
-            background: rgba(0, 0, 0, 0.8);
-            color: #fff;
-            font-size: 7px;
-            font-weight: 700;
-            padding: 2px 6px;
-            border-radius: 3px;
-            margin-top: 2px;
-            text-align: center;
-            white-space: nowrap;
-            pointer-events: none;
-        }
-
-        /* ===== ÉCRAN DE CONNEXION (STYLE ORIGINAL) ===== */
+        /* ÉCRAN DE CONNEXION */
         .login-screen {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: #0b1725;
             display: flex;
             align-items: center;
@@ -774,9 +454,7 @@
             z-index: 10000;
             padding: 20px;
         }
-        .login-screen.hidden {
-            display: none;
-        }
+        .login-screen.hidden { display: none; }
         .login-box {
             background: #0f2238;
             border-radius: 20px;
@@ -788,19 +466,9 @@
             max-height: 90vh;
             overflow-y: auto;
         }
-        .login-box .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            margin-bottom: 5px;
-        }
-        .login-box .logo span {
-            color: #f5c842;
-        }
-        .login-box .subtitle {
-            font-size: 0.7rem;
-            color: #8ab4d6;
-            margin-bottom: 20px;
-        }
+        .login-box .logo { font-size: 1.5rem; font-weight: 800; margin-bottom: 5px; }
+        .login-box .logo span { color: #f5c842; }
+        .login-box .subtitle { font-size: 0.7rem; color: #8ab4d6; margin-bottom: 20px; }
         .login-box label {
             display: block;
             text-align: left;
@@ -810,8 +478,7 @@
             margin-bottom: 4px;
             margin-top: 12px;
         }
-        .login-box input,
-        .login-box select {
+        .login-box input, .login-box select {
             width: 100%;
             padding: 10px 14px;
             border-radius: 10px;
@@ -821,10 +488,7 @@
             font-size: 0.8rem;
             font-family: inherit;
         }
-        .login-box select option {
-            background: #0b1725;
-            color: #fff;
-        }
+        .login-box select option { background: #0b1725; color: #fff; }
         .btn-login {
             width: 100%;
             padding: 12px;
@@ -838,17 +502,11 @@
             margin-top: 16px;
             font-family: inherit;
         }
-        .btn-login:active {
-            transform: scale(0.96);
-        }
-        .login-info {
-            font-size: 0.5rem;
-            color: #5a7f9e;
-            margin-top: 10px;
-        }
+        .btn-login:active { transform: scale(0.96); }
+        .login-info { font-size: 0.5rem; color: #5a7f9e; margin-top: 10px; }
         .warning-box {
-            background: rgba(231, 76, 60, 0.1);
-            border: 1px solid rgba(231, 76, 60, 0.3);
+            background: rgba(231,76,60,0.1);
+            border: 1px solid rgba(231,76,60,0.3);
             border-radius: 10px;
             padding: 10px;
             margin-top: 12px;
@@ -858,143 +516,71 @@
             line-height: 1.4;
         }
         .family-section {
-            background: rgba(52, 152, 219, 0.1);
-            border: 1px solid rgba(52, 152, 219, 0.3);
+            background: rgba(52,152,219,0.1);
+            border: 1px solid rgba(52,152,219,0.3);
             border-radius: 10px;
             padding: 10px;
             margin-top: 12px;
             text-align: left;
             display: none;
         }
-        .family-section label {
-            color: #3498db;
-            margin-top: 6px;
-        }
-        .family-section .hint {
-            font-size: 0.5rem;
-            color: #5a7f9e;
-            margin-top: 2px;
-        }
+        .family-section label { color: #3498db; margin-top: 6px; }
+        .family-section .hint { font-size: 0.5rem; color: #5a7f9e; margin-top: 2px; }
 
-        .visibility-banner {
-            padding: 4px 14px;
-            text-align: center;
-            font-size: 0.55rem;
-            border-bottom: 1px solid #1a3a55;
+        .family-list {
+            padding: 0 16px 10px;
         }
-        .visibility-banner.civil {
-            background: rgba(52, 152, 219, 0.15);
-            color: #3498db;
+        .family-member {
+            background: rgba(52,152,219,0.1);
+            border: 1px solid rgba(52,152,219,0.3);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .visibility-banner.force {
-            background: rgba(245, 200, 66, 0.1);
-            color: #f5c842;
-        }
-        .visibility-banner.volontaire {
-            background: rgba(46, 204, 113, 0.1);
-            color: #2ecc71;
+        .family-member .fm-name { font-weight: 600; font-size: 0.75rem; }
+        .family-member .fm-status { font-size: 0.55rem; color: #8ab4d6; }
+        .family-member .fm-actions button {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #b6cdff;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.5rem;
+            cursor: pointer;
+            font-family: inherit;
         }
 
         @media (max-width:600px) {
-            .map-wrapper {
-                height: 250px;
-                margin: 8px 10px;
-            }
-            .header .logo {
-                font-size: 1rem;
-            }
-            .header .user-badge {
-                font-size: 0.6rem;
-                padding: 3px 10px;
-            }
-            .loc-bar {
-                font-size: 0.7rem;
-                padding: 6px 14px;
-            }
-            .loc-bar .stats {
-                font-size: 0.6rem;
-                gap: 10px;
-            }
-            .group-card {
-                min-width: 110px;
-                padding: 10px 12px;
-            }
-            .group-card .g-name {
-                font-size: 0.75rem;
-            }
-            .btn-alert {
-                font-size: 0.9rem;
-                padding: 14px;
-            }
-            .tw-section {
-                padding: 10px 12px;
-            }
-            .tw-messages {
-                font-size: 0.7rem;
-                max-height: 100px;
-            }
-            .tw-controls button {
-                font-size: 0.65rem;
-                padding: 8px 10px;
-                min-width: 50px;
-            }
-            .city-zoom {
-                bottom: 45px;
-                padding: 3px 6px;
-                gap: 3px;
-            }
-            .city-zoom button {
-                font-size: 0.45rem;
-                padding: 2px 7px;
-            }
-            .login-box {
-                padding: 20px 16px;
-                max-width: 100%;
-                margin: 0 10px;
-            }
-            .login-box .logo {
-                font-size: 1.2rem;
-            }
-            .login-box input,
-            .login-box select {
-                padding: 8px 12px;
-                font-size: 0.7rem;
-            }
-            .btn-login {
-                padding: 10px;
-                font-size: 0.8rem;
-            }
-        }
-
-        .mapboxgl-popup-content {
-            background: rgba(10, 26, 42, 0.95) !important;
-            backdrop-filter: blur(10px) !important;
-            color: #fff !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            border-radius: 8px !important;
-            padding: 6px 10px !important;
-            font-size: 0.55rem !important;
-        }
-        .mapboxgl-popup-tip {
-            border-top-color: rgba(10, 26, 42, 0.95) !important;
+            .header .logo { font-size:1rem; }
+            .header .user-badge { font-size:0.6rem; padding:3px 10px; }
+            .loc-bar { font-size:0.7rem; padding:6px 14px; }
+            .loc-bar .stats { font-size:0.6rem; gap:10px; }
+            #map { height:250px; }
+            .group-card { min-width:110px; padding:10px 12px; }
+            .group-card .g-name { font-size:0.75rem; }
+            .btn-alert { font-size:0.9rem; padding:14px; }
+            .tw-section { padding:10px 12px; }
+            .tw-messages { font-size:0.7rem; max-height:100px; }
+            .tw-controls button { font-size:0.65rem; padding:8px 10px; min-width:50px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- ===== ÉCRAN DE CONNEXION (STYLE ORIGINAL) ===== -->
+    <!-- ===== ÉCRAN DE CONNEXION ===== -->
     <div class="login-screen" id="loginScreen">
         <div class="login-box">
             <div class="logo">🛡️ FOKON'<span>ALERT</span></div>
-            <div class="subtitle">Système de sécurité communautaire · Madagascar 3D</div>
+            <div class="subtitle">Système de sécurité communautaire · Madagascar</div>
 
             <label>👤 Type de compte</label>
             <select id="loginType" onchange="updateLoginInfo()">
                 <option value="police">🚔 Police Nationale</option>
                 <option value="gendarmerie">⭐ Gendarmerie Nationale</option>
-                <option value="groupeA">🔴 Groupe A</option>
-                <option value="groupeB">🟢 Groupe B</option>
-                <option value="groupeC">🔵 Groupe C</option>
+                <option value="volontaire">🟢 Volontaire de quartier</option>
                 <option value="civil">🔵 Civil (protection personnelle)</option>
             </select>
 
@@ -1025,9 +611,12 @@
             </div>
 
             <button class="btn-login" onclick="doLogin()">🔓 SE CONNECTER</button>
-            <div class="login-info">✅ Codes test: police2024 · gendarmerie2024 · groupe2024</div>
+            <div class="login-info">✅ Codes test: police2024 · gendarmerie2024 · volontaire2024</div>
         </div>
     </div>
+
+    <!-- ===== BANNIÈRE HORS-LIGNE ===== -->
+    <div class="offline-bar" id="offlineBar">📵 Mode hors-ligne — Fonctions limitées</div>
 
     <!-- ===== TOAST ===== -->
     <div class="toast" id="toast"></div>
@@ -1060,44 +649,25 @@
         </div>
     </div>
 
-    <!-- ===== CARTE 3D ===== -->
+    <!-- ===== CARTE ===== -->
     <div class="map-wrapper" id="mapWrapper" style="display:none;">
         <div id="map"></div>
-
-        <div class="map-controls">
-            <button id="btnLocate" onclick="toggleMyPosition()">📍</button>
+        
+        <div class="position-toggle" id="positionToggle" onclick="toggleMyPosition()">
+            <span class="toggle-dot">👁️</span>
+            <span id="toggleText">Montrer ma position</span>
         </div>
 
-        <button class="theme-toggle" id="themeToggle">
-            <span id="themeIcon">☀️</span>
-            <div class="toggle-track">
-                <div class="toggle-thumb"></div>
-            </div>
-        </button>
-
-        <div class="city-zoom" id="cityButtons">
-            <button data-lat="-18.8792" data-lng="47.5079">Tana</button>
-            <button data-lat="-15.7167" data-lng="46.3167">Majunga</button>
-            <button data-lat="-12.2833" data-lng="49.2833">Diego</button>
-            <button data-lat="-18.1523" data-lng="49.4023">Tamatave</button>
-            <button data-lat="-13.3125" data-lng="48.2625">Nosy Be</button>
-            <button data-lat="-21.4333" data-lng="47.0833">Fianar</button>
-            <button data-lat="-23.35" data-lng="43.6667">Toliara</button>
-        </div>
-
-        <div class="map-legend" id="mapLegend">
-            <div class="legend-item"><span class="legend-dot" style="background:#f5c842;"></span> Police</div>
-            <div class="legend-item"><span class="legend-dot" style="background:#8e44ad;"></span> Gendarmerie</div>
-            <div class="legend-item"><span class="legend-dot" style="background:#e74c3c;"></span> Groupe A</div>
-            <div class="legend-item"><span class="legend-dot" style="background:#2ecc71;"></span> Groupe B</div>
-            <div class="legend-item"><span class="legend-dot" style="background:#3498db;"></span> Groupe C</div>
-        </div>
+        <div class="map-legend" id="mapLegend"></div>
     </div>
 
     <!-- ===== GROUPES ===== -->
     <div id="groupsSection" style="display:none;">
         <div class="section-title">👥 Groupes de vigilance</div>
         <div class="group-list" id="groupList"></div>
+
+        <div class="section-title" id="familyTitle" style="display:none;">👨‍👩‍👧 Votre famille</div>
+        <div class="family-list" id="familyList"></div>
     </div>
 
     <!-- ===== ALERTE ===== -->
@@ -1133,97 +703,62 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- ===== JAVASCRIPT ===== -->
+    <!-- ===== JAVASCRIPT COMPLET AVEC BRUITAGES RÉALISTES ===== -->
     <!-- ============================================================ -->
     <script>
         (function() {
             'use strict';
 
             // =========================================================
-            // 1. CONFIGURATION MAPBOX
-            // =========================================================
-            mapboxgl.accessToken = 'pk.eyJ1IjoiZm9rb3RhbnltZyIsImEiOiJjbXJtZ3pjcHgyejJpMnpyenJnMWdhNnExIn0.lWCyUBdycNP1pQtNvRsaEA';
-
-            // =========================================================
-            // 2. MATRICE DE VISIBILITÉ
+            // 1. MATRICE DE VISIBILITÉ
             // =========================================================
             const MATRICE = {
                 police: {
                     voitPolice: true,
                     voitGendarmerie: true,
-                    voitGroupeA: true,
-                    voitGroupeB: true,
-                    voitGroupeC: true,
+                    voitVolontaires: true,
                     voitCivils: true,
                     voitFamille: true,
                     emoji: '🚔',
                     nom: 'Police',
                     couleur: '#f5c842',
-                    label: '✅ Vous voyez : Police, Gendarmerie, Groupes A/B/C, Civils, Famille'
+                    ordre: 1,
+                    label: '✅ Vous voyez : Police, Gendarmerie, Volontaires, Civils, Famille'
                 },
                 gendarmerie: {
                     voitPolice: true,
                     voitGendarmerie: true,
-                    voitGroupeA: true,
-                    voitGroupeB: true,
-                    voitGroupeC: true,
+                    voitVolontaires: true,
                     voitCivils: true,
                     voitFamille: true,
                     emoji: '⭐',
                     nom: 'Gendarmerie',
                     couleur: '#8e44ad',
-                    label: '✅ Vous voyez : Police, Gendarmerie, Groupes A/B/C, Civils, Famille'
+                    ordre: 2,
+                    label: '✅ Vous voyez : Police, Gendarmerie, Volontaires, Civils, Famille'
                 },
-                groupeA: {
+                volontaire: {
                     voitPolice: false,
                     voitGendarmerie: false,
-                    voitGroupeA: true,
-                    voitGroupeB: true,
-                    voitGroupeC: true,
-                    voitCivils: true,
-                    voitFamille: false,
-                    emoji: '🔴',
-                    nom: 'Groupe A',
-                    couleur: '#e74c3c',
-                    label: '✅ Vous voyez : Groupes A, B, C, Civils'
-                },
-                groupeB: {
-                    voitPolice: false,
-                    voitGendarmerie: false,
-                    voitGroupeA: true,
-                    voitGroupeB: true,
-                    voitGroupeC: true,
+                    voitVolontaires: true,
                     voitCivils: true,
                     voitFamille: false,
                     emoji: '🟢',
-                    nom: 'Groupe B',
+                    nom: 'Volontaire',
                     couleur: '#2ecc71',
-                    label: '✅ Vous voyez : Groupes A, B, C, Civils'
-                },
-                groupeC: {
-                    voitPolice: false,
-                    voitGendarmerie: false,
-                    voitGroupeA: true,
-                    voitGroupeB: true,
-                    voitGroupeC: true,
-                    voitCivils: true,
-                    voitFamille: false,
-                    emoji: '🔵',
-                    nom: 'Groupe C',
-                    couleur: '#3498db',
-                    label: '✅ Vous voyez : Groupes A, B, C, Civils'
+                    ordre: 3,
+                    label: '⚠️ Vous voyez : Volontaires, Civils (Forces de l\'ordre masquées)'
                 },
                 civil: {
                     voitPolice: false,
                     voitGendarmerie: false,
-                    voitGroupeA: false,
-                    voitGroupeB: false,
-                    voitGroupeC: false,
+                    voitVolontaires: false,
                     voitCivils: false,
                     voitFamille: true,
                     emoji: '🔵',
                     nom: 'Civil',
                     couleur: '#3498db',
+                    ordre: 4,
                     label: '🔵 Vous voyez UNIQUEMENT votre famille (avec code)'
                 }
             };
@@ -1236,9 +771,7 @@
                 const mapping = {
                     'police': 'voitPolice',
                     'gendarmerie': 'voitGendarmerie',
-                    'groupeA': 'voitGroupeA',
-                    'groupeB': 'voitGroupeB',
-                    'groupeC': 'voitGroupeC',
+                    'volontaire': 'voitVolontaires',
                     'civil': 'voitCivils',
                     'famille': 'voitFamille'
                 };
@@ -1252,58 +785,63 @@
             }
 
             // =========================================================
-            // 3. VARIABLES GLOBALES
+            // 2. VARIABLES GLOBALES
             // =========================================================
             let userProfile = null;
-            let userLat = null,
-                userLng = null;
+            let userLat = null, userLng = null, userMarker = null;
             let map = null;
             let positionShared = false;
-            let userMarker = null;
-            let isNight = false;
+            let currentCall = null, localStream = null, isCallActive = false;
+            let peer = null, peerId = '';
+            let listenInterval = null;
             let alertActive = false;
             let familyCode = '';
             let isOnline = navigator.onLine;
             let groupMarkers = {};
             let groupPositions = {};
-            let peer = null,
-                peerId = '';
-            let currentCall = null,
-                localStream = null,
-                isCallActive = false;
-            let listenInterval = null;
-            let audioCtx = null,
-                noiseGain = null,
-                noiseSource = null;
+            let allMessages = [];
+            let useFirebase = false;
+            let db = null;
 
             // =========================================================
-            // 4. AUDIO TALKIE
+            // 3. SYSTÈME AUDIO TALKIE-WALKIE RÉALISTE
             // =========================================================
+            let audioCtx = null;
+            let noiseGain = null;
+            let noiseSource = null;
+
             function initAudio() {
                 try {
-                    audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                     noiseGain = audioCtx.createGain();
                     noiseGain.gain.value = 0;
                     noiseGain.connect(audioCtx.destination);
-                } catch (e) {}
+                    console.log('🔊 AudioContext initialisé');
+                } catch(e) {
+                    console.warn('AudioContext non disponible');
+                }
             }
 
+            // Créer le bruit blanc (statique radio)
             function createWhiteNoise() {
                 if (!audioCtx) return;
                 try {
                     const bufferSize = 2 * audioCtx.sampleRate;
                     const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
                     const output = noiseBuffer.getChannelData(0);
-                    for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+                    for (let i = 0; i < bufferSize; i++) {
+                        output[i] = Math.random() * 2 - 1;
+                    }
                     noiseSource = audioCtx.createBufferSource();
                     noiseSource.buffer = noiseBuffer;
                     noiseSource.loop = true;
                     noiseSource.connect(noiseGain);
                     noiseSource.start();
-                } catch (e) {}
+                } catch(e) {}
             }
 
-            function playSquelch(duration = 0.12) {
+            // Effet SQUELCH (ouverture/fermeture du canal)
+            function playSquelch(duration = 0.15) {
                 if (!audioCtx) return;
                 try {
                     const osc = audioCtx.createOscillator();
@@ -1311,15 +849,16 @@
                     osc.type = 'square';
                     osc.frequency.setValueAtTime(800, audioCtx.currentTime);
                     osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + duration);
-                    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
                     osc.start();
                     osc.stop(audioCtx.currentTime + duration);
-                } catch (e) {}
+                } catch(e) {}
             }
 
+            // Effet BIP DE DÉBUT de transmission
             function playBeepStart() {
                 if (!audioCtx) return;
                 try {
@@ -1327,16 +866,18 @@
                     const gain = audioCtx.createGain();
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
-                    osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.04);
-                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.05);
+                    osc.frequency.setValueAtTime(1000, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
                     osc.start();
-                    osc.stop(audioCtx.currentTime + 0.1);
-                } catch (e) {}
+                    osc.stop(audioCtx.currentTime + 0.15);
+                } catch(e) {}
             }
 
+            // Effet BIP DE FIN de transmission
             function playBeepEnd() {
                 if (!audioCtx) return;
                 try {
@@ -1344,26 +885,33 @@
                     const gain = audioCtx.createGain();
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-                    osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.04);
-                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+                    osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.05);
+                    osc.frequency.setValueAtTime(1000, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
                     osc.start();
-                    osc.stop(audioCtx.currentTime + 0.12);
-                } catch (e) {}
+                    osc.stop(audioCtx.currentTime + 0.2);
+                } catch(e) {}
             }
 
-            function playRadioStatic(intensity = 0.15) {
+            // Effet STATIQUE RADIO
+            function playRadioStatic(intensity = 0.3) {
                 if (!audioCtx || !noiseGain) return;
-                try { noiseGain.gain.setValueAtTime(intensity, audioCtx.currentTime); } catch (e) {}
+                try {
+                    noiseGain.gain.setValueAtTime(intensity, audioCtx.currentTime);
+                } catch(e) {}
             }
 
             function stopRadioStatic() {
                 if (!noiseGain) return;
-                try { noiseGain.gain.setValueAtTime(0, audioCtx.currentTime); } catch (e) {}
+                try {
+                    noiseGain.gain.setValueAtTime(0, audioCtx.currentTime);
+                } catch(e) {}
             }
 
+            // Effet CLIC PTT (bouton "Press To Talk")
             function playPTTClick() {
                 if (!audioCtx) return;
                 try {
@@ -1371,86 +919,130 @@
                     const gain = audioCtx.createGain();
                     osc.type = 'triangle';
                     osc.frequency.setValueAtTime(500, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.02);
-                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.03);
+                    osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.03);
+                    gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
                     osc.start();
-                    osc.stop(audioCtx.currentTime + 0.03);
-                } catch (e) {}
+                    osc.stop(audioCtx.currentTime + 0.05);
+                } catch(e) {}
             }
 
-            function simulerTransmission(duree = 1200) {
+            // Simulation COMPLÈTE d'une transmission talkie-walkie
+            function simulerTransmission(quiParle, duree = 2000) {
                 playPTTClick();
                 playBeepStart();
-                playSquelch(0.06);
-                setTimeout(() => playRadioStatic(0.1), 60);
-                setTimeout(() => { playBeepEnd();
-                    playSquelch(0.06);
+                playSquelch(0.1);
+                
+                setTimeout(() => {
+                    playRadioStatic(0.15);
+                }, 100);
+
+                setTimeout(() => {
+                    playBeepEnd();
+                    playSquelch(0.15);
                     stopRadioStatic();
-                    playPTTClick(); }, duree);
+                    playPTTClick();
+                }, duree);
             }
 
+            // SON D'ALERTE (3 bips stridents)
             function playAlertSound() {
                 if (!audioCtx) return;
-                for (let i = 0; i < 3; i++) {
-                    setTimeout(() => {
-                        try {
+                try {
+                    for (let i = 0; i < 3; i++) {
+                        setTimeout(() => {
                             const osc = audioCtx.createOscillator();
                             const gain = audioCtx.createGain();
                             osc.type = 'square';
                             osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-                            gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-                            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
                             osc.connect(gain);
                             gain.connect(audioCtx.destination);
                             osc.start();
-                            osc.stop(audioCtx.currentTime + 0.2);
-                        } catch (e) {}
-                    }, i * 300);
-                }
+                            osc.stop(audioCtx.currentTime + 0.3);
+                        }, i * 400);
+                    }
+                } catch(e) {}
             }
 
             // =========================================================
-            // 5. TOAST
+            // 4. FIREBASE
+            // =========================================================
+            const firebaseConfig = {
+                apiKey: "AIzaSyDemoKey123456789",
+                authDomain: "ton-projet.firebaseapp.com",
+                databaseURL: "https://ton-projet-default-rtdb.firebaseio.com",
+                projectId: "ton-projet",
+                storageBucket: "ton-projet.appspot.com",
+                messagingSenderId: "123456789",
+                appId: "1:123456789:web:abcdef123456"
+            };
+
+            try {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                useFirebase = true;
+                console.log('🔥 Firebase connecté !');
+            } catch (e) {
+                console.warn('⚠️ Firebase non configuré, mode local');
+            }
+
+            // =========================================================
+            // 5. DÉTECTION CONNEXION
+            // =========================================================
+            function updateOnlineStatus() {
+                isOnline = navigator.onLine;
+                const banner = document.getElementById('offlineBar');
+                const dot = document.getElementById('statusDot');
+                if (!isOnline) {
+                    banner.classList.add('show');
+                    if (dot) dot.style.background = '#e74c3c';
+                } else {
+                    banner.classList.remove('show');
+                    if (dot) dot.style.background = '#5dffa0';
+                }
+            }
+            window.addEventListener('online', updateOnlineStatus);
+            window.addEventListener('offline', updateOnlineStatus);
+            updateOnlineStatus();
+
+            // =========================================================
+            // 6. TOAST
             // =========================================================
             function showToast(msg, type) {
                 const t = document.getElementById('toast');
                 t.textContent = msg;
                 t.className = 'toast show ' + (type || 'info');
                 clearTimeout(t._hide);
-                t._hide = setTimeout(() => { t.className = 'toast'; }, 2500);
+                t._hide = setTimeout(() => { t.className = 'toast'; }, 4000);
             }
             window.showToast = showToast;
 
             // =========================================================
-            // 6. IDENTIFIANT
+            // 7. IDENTIFIANT UNIQUE
             // =========================================================
             function getUserId() {
                 let id = localStorage.getItem('fokon_user_id');
-                if (!id) { id = 'user_' + Math.random().toString(36).substr(2, 8);
-                    localStorage.setItem('fokon_user_id', id); }
-                return id;
-            }
-
-            function getPeerId() {
-                let id = localStorage.getItem('fokon_peer_id');
-                if (!id) { id = 'tw_' + Math.random().toString(36).substr(2, 8);
-                    localStorage.setItem('fokon_peer_id', id); }
+                if (!id) {
+                    id = 'user_' + Math.random().toString(36).substr(2, 9);
+                    localStorage.setItem('fokon_user_id', id);
+                }
                 return id;
             }
 
             // =========================================================
-            // 7. CONNEXION
+            // 8. CONNEXION
             // =========================================================
             window.updateLoginInfo = function() {
                 const type = document.getElementById('loginType').value;
                 document.getElementById('familySection').style.display = (type === 'civil') ? 'block' : 'none';
+                
+                const warning = document.getElementById('loginWarning');
                 const info = MATRICE[type];
-                if (info) {
-                    document.getElementById('loginWarning').innerHTML = '🔒 <strong>' + info.nom + ' :</strong> ' + info.label;
-                }
+                warning.innerHTML = '🔒 <strong>' + info.nom + ' :</strong> ' + info.label;
             };
 
             window.doLogin = function() {
@@ -1465,11 +1057,14 @@
                 const validCodes = {
                     police: ['police2024', 'fokon2024'],
                     gendarmerie: ['gendarmerie2024', 'fokon2024'],
-                    groupeA: ['groupe2024'],
-                    groupeB: ['groupe2024'],
-                    groupeC: ['groupe2024'],
+                    volontaire: ['volontaire2024'],
                     civil: ['']
                 };
+
+                if ((type === 'police' || type === 'gendarmerie' || type === 'volontaire') && code === '') {
+                    showToast('⚠️ Code d\'accès requis', 'error');
+                    return;
+                }
                 if (type !== 'civil' && !validCodes[type].includes(code.toLowerCase())) {
                     showToast('❌ Code d\'accès invalide', 'error');
                     return;
@@ -1495,353 +1090,343 @@
 
                 showToast('✅ Connecté · ' + MATRICE[type].nom, 'success');
                 addTwMessage('🔄 Système', '✅ ' + name + ' connecté · ' + MATRICE[type].emoji + ' ' + MATRICE[type].nom,
-                    'system');
-                playSquelch(0.12);
+                'system');
+                playSquelch(0.2);
+
+                if (useFirebase && db) {
+                    db.ref('users/' + getUserId()).set({ name, type, commune, timestamp: Date.now() });
+                }
             };
 
             window.doLogout = function() {
-                if (userMarker) { userMarker.remove();
-                    userMarker = null; }
+                if (positionShared && userMarker) { map.removeLayer(userMarker); userMarker = null; }
                 if (currentCall) { currentCall.close(); }
                 if (localStream) { localStream.getTracks().forEach(t => t.stop()); }
                 userProfile = null;
                 positionShared = false;
                 stopRadioStatic();
+
                 ['mainHeader', 'visibilityBanner', 'locBar', 'mapWrapper', 'groupsSection', 'alertSection', 'twSection']
-                .forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.style.display = 'none';
-                });
+                    .forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.style.display = 'none';
+                    });
                 document.getElementById('loginScreen').classList.remove('hidden');
                 showToast('👋 Déconnecté', 'info');
             };
 
             // =========================================================
-            // 8. INTERFACE
+            // 9. INTERFACE UTILISATEUR
             // =========================================================
             function setupUI() {
-                const info = MATRICE[userProfile.type];
-                document.getElementById('profileBadge').textContent = info.emoji + ' ' + info.nom;
-                document.getElementById('visibilityText').textContent = info.label;
-                document.getElementById('visibilityBanner').className = 'visibility-banner ' +
-                    (userProfile.type === 'civil' ? 'civil' :
-                    userProfile.type === 'groupeA' || userProfile.type === 'groupeB' || userProfile.type === 'groupeC' ?
-                    'volontaire' : 'force');
-                document.getElementById('currentCity').textContent = userProfile.commune;
-                buildGroupCards();
-                updateStats();
-            }
-
-            function updateStats() {
                 const type = userProfile.type;
-                let g = 0,
-                    m = 0;
-                if (type === 'police' || type === 'gendarmerie') { g = 5;
-                    m = 20; } else if (type === 'groupeA' || type === 'groupeB' || type === 'groupeC') { g = 3;
-                    m = 12; } else { g = 0;
-                    m = 2; }
-                document.getElementById('groupCount').textContent = g;
-                document.getElementById('memberCount').textContent = m;
+                const info = MATRICE[type];
+
+                const badge = document.getElementById('profileBadge');
+                badge.textContent = info.emoji + ' ' + info.nom;
+                badge.style.borderLeft = '3px solid ' + info.couleur;
+
+                const vb = document.getElementById('visibilityBanner');
+                document.getElementById('visibilityText').textContent = info.label;
+                vb.className = 'visibility-banner ' + (type === 'civil' ? 'civil' : type === 'volontaire' ? 'volontaire' :
+                    'force');
+
+                document.getElementById('connectionStatus').textContent = useFirebase ? '🔥 Cloud' : '📡 Local';
+
+                buildGroupCards();
+                buildLegend();
+                updateStats();
+                buildFamilyList();
+
+                setTimeout(() => {
+                    addTwMessage('🔄 Système', '👁️ ' + info.label, 'system');
+                }, 500);
             }
 
             // =========================================================
-            // 9. GROUPES
+            // 10. STATS
+            // =========================================================
+            function updateStats() {
+                const type = userProfile.type;
+                let groupCount = 0, memberCount = 0, patrolCount = 0;
+                
+                if (type === 'police' || type === 'gendarmerie') {
+                    groupCount = 4; memberCount = 18; patrolCount = 3;
+                } else if (type === 'volontaire') {
+                    groupCount = 2; memberCount = 8; patrolCount = 2;
+                } else {
+                    groupCount = 1; memberCount = 2; patrolCount = 0;
+                }
+                
+                document.getElementById('groupCount').textContent = groupCount;
+                document.getElementById('memberCount').textContent = memberCount;
+                document.getElementById('patrolCount').textContent = patrolCount;
+            }
+
+            // =========================================================
+            // 11. GROUPES
             // =========================================================
             function buildGroupCards() {
                 const container = document.getElementById('groupList');
                 container.innerHTML = '';
 
+                const type = userProfile.type;
                 const groups = [
-                    { id: 'police', name: '🚔 Police', label: 'Poste Mahabibo', visible: peutVoir('police') },
-                    { id: 'gendarmerie', name: '⭐ Gendarmerie', label: 'Brigade Majunga', visible: peutVoir(
-                        'gendarmerie') },
-                    { id: 'groupeA', name: '🔴 Groupe A', label: 'Patrouille nord', visible: peutVoir('groupeA'),
-                        cls: 'gA' },
-                    { id: 'groupeB', name: '🟢 Groupe B', label: 'Rondes sud', visible: peutVoir('groupeB'),
-                        cls: 'gB' },
-                    { id: 'groupeC', name: '🔵 Groupe C', label: 'Intervention est', visible: peutVoir('groupeC'),
-                        cls: 'gC' },
+                    { id: 'police', name: '🚔 Police', label: 'Poste Mahabibo', members: '8 agents', role: 'police',
+                        visible: peutVoir('police') },
+                    { id: 'gendarmerie', name: '⭐ Gendarmerie', label: 'Brigade Majunga', members: '6 gendarmes',
+                        role: 'gendarmerie', visible: peutVoir('gendarmerie') },
+                    { id: 'volontaire', name: '🟢 Volontaires', label: 'Rondes actives', members: '4 volontaires',
+                        role: 'volontaire', visible: peutVoir('volontaire') },
+                    { id: 'civil', name: '🔵 Civils', label: 'Protection civile', members: '2 civils',
+                        role: 'civil', visible: peutVoir('civil') || (type === 'civil' && familyCode) }
                 ];
 
-                if (peutVoir('civil') || (userProfile.type === 'civil' && familyCode)) {
-                    groups.push({ id: 'civil', name: '🔵 Civils', label: 'Protection civile', visible: true });
-                }
-
+                let hasVisible = false;
                 groups.forEach(g => {
+                    if (g.visible) hasVisible = true;
                     const card = document.createElement('div');
                     card.className = 'group-card' + (g.visible ? '' : ' locked');
                     card.style.borderLeftColor = g.visible ? '#f5c842' : '#555';
                     card.innerHTML = `
                         <div class="g-name">${g.name}</div>
                         <div class="g-status">${g.visible ? g.label : '🔒 Position confidentielle'}</div>
+                        <div class="g-members">${g.visible ? g.members : 'Information restreinte'}</div>
                         ${g.visible ? `
                         <div class="g-actions">
                             <button class="primary" onclick="showOnMap('${g.id}')">📍 Voir</button>
                             <button onclick="callTeam('${g.id}')">📡 Appel</button>
                         </div>` : `
-                        <div style="font-size:0.45rem;color:#e74c3c;margin-top:2px;">🔒 Invisible pour votre sécurité</div>`}
+                        <div class="locked-label">🔒 Invisible pour votre sécurité</div>`}
                     `;
                     container.appendChild(card);
                 });
+
+                if (!hasVisible && type === 'civil') {
+                    container.innerHTML = `
+                        <div style="color:#8ab4d6;font-size:0.7rem;padding:10px;text-align:center;">
+                            🔒 Pour votre sécurité, aucune position n'est affichée.<br>
+                            Utilisez le bouton 👁️ pour activer votre position en cas d'urgence.
+                        </div>`;
+                }
             }
 
             // =========================================================
-            // 10. CARTE 3D MAPBOX
+            // 12. FAMILLE
             // =========================================================
-            const communes = {
-                majunga: [-15.7167, 46.3167],
-                tana: [-18.8792, 47.5079],
-                tamatave: [-18.1500, 49.4000],
-                fianar: [-21.4500, 47.0800],
-                diego: [-12.2800, 49.2900],
-                toliara: [-23.3500, 43.6667]
-            };
+            function buildFamilyList() {
+                const container = document.getElementById('familyList');
+                const title = document.getElementById('familyTitle');
+                container.innerHTML = '';
 
+                if (userProfile.type !== 'civil' || !familyCode) {
+                    title.style.display = 'none';
+                    return;
+                }
+
+                title.style.display = 'block';
+
+                const familyMembers = [
+                    { name: 'Marie Rakoto', status: '🟢 En ligne', position: 'Activée', lat: -15.7170, lng: 46.3170 },
+                    { name: 'Pierre Rakoto', status: '⚫ Hors ligne', position: 'Désactivée', lat: null, lng: null },
+                    { name: 'Sophie Rakoto', status: '🟢 En ligne', position: 'Activée', lat: -15.7140, lng: 46.3185 },
+                ];
+
+                familyMembers.forEach(m => {
+                    const div = document.createElement('div');
+                    div.className = 'family-member';
+                    div.innerHTML = `
+                        <div>
+                            <div class="fm-name">${m.name}</div>
+                            <div class="fm-status">${m.status} · ${m.position}</div>
+                        </div>
+                        <div class="fm-actions">
+                            ${m.lat ? `<button onclick="showFamilyOnMap(${m.lat}, ${m.lng}, '${m.name}')">📍 Voir</button>` : ''}
+                            <button onclick="messageFamily('${m.name}')">💬 Message</button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+
+            // =========================================================
+            // 13. LÉGENDE
+            // =========================================================
+            function buildLegend() {
+                const legend = document.getElementById('mapLegend');
+                let html = '<div class="legend-item"><span class="legend-dot" style="background:#e74c3c;"></span> <b>Vous</b></div>';
+
+                const items = [
+                    { id: 'police', label: 'Police', color: '#f5c842', visible: peutVoir('police') },
+                    { id: 'gendarmerie', label: 'Gendarmerie', color: '#8e44ad', visible: peutVoir('gendarmerie') },
+                    { id: 'volontaire', label: 'Volontaires', color: '#2ecc71', visible: peutVoir('volontaire') },
+                    { id: 'civil', label: 'Civils', color: '#3498db', visible: peutVoir('civil') || (userProfile?.type ===
+                            'civil' && familyCode) }
+                ];
+
+                items.forEach(item => {
+                    if (item.visible) {
+                        html +=
+                            `<div class="legend-item"><span class="legend-dot" style="background:${item.color};"></span> <b style="color:${item.color};">${item.label}</b></div>`;
+                    } else {
+                        html +=
+                            `<div class="legend-item legend-hidden"><span class="legend-dot" style="background:${item.color};"></span> ${item.label} (masqué)</div>`;
+                    }
+                });
+
+                html += '<div class="legend-item">🚨 <b style="color:#e74c3c;">Alerte</b></div>';
+                legend.innerHTML = html;
+            }
+
+            // =========================================================
+            // 14. CARTE
+            // =========================================================
             function initMap() {
+                const communes = {
+                    majunga: [-15.7167, 46.3167],
+                    tana: [-18.8792, 47.5079],
+                    tamatave: [-18.1500, 49.4000],
+                    fianar: [-21.4500, 47.0800],
+                    diego: [-12.2800, 49.2900],
+                    toliara: [-23.3500, 43.6667]
+                };
                 const center = communes[userProfile.commune] || [-15.7167, 46.3167];
 
-                map = new mapboxgl.Map({
-                    container: 'map',
-                    style: 'mapbox://styles/mapbox/standard',
+                map = L.map('map', {
                     center: center,
-                    zoom: 14.5,
-                    pitch: 50,
-                    bearing: 0,
-                    antialias: true,
+                    zoom: 15,
+                    zoomControl: false,
+                    attributionControl: false
                 });
 
-                map.on('load', function() {
-                    // Bâtiments 3D
-                    try {
-                        map.setPaintProperty('building', 'fill-extrusion-color', [
-                            'interpolate', ['linear'], ['get', 'height'],
-                            0, '#4a4a5a',
-                            10, '#6b6b8a',
-                            30, '#8a8aaa',
-                            60, '#b0b0cc'
-                        ]);
-                        map.setPaintProperty('building', 'fill-extrusion-opacity', 0.85);
-                    } catch (e) {}
+                L.control.zoom({ position: 'topright', zoomInText: '+', zoomOutText: '−' }).addTo(map);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-                    // Arbres animés
-                    map.addSource('trees', {
-                        type: 'geojson',
-                        data: generateTrees()
-                    });
-                    map.addLayer({
-                        id: 'trees-layer',
-                        type: 'circle',
-                        source: 'trees',
-                        paint: {
-                            'circle-radius': 4,
-                            'circle-color': '#6bcb77',
-                            'circle-opacity': 0.6,
-                            'circle-blur': 0.3,
-                        }
-                    });
+                L.circle(center, {
+                    radius: 1500,
+                    color: '#f5c842',
+                    fillColor: '#f5c842',
+                    fillOpacity: 0.08,
+                    weight: 1.5,
+                    dashArray: '6, 8'
+                }).addTo(map).bindPopup('🛡️ Zone de vigilance');
 
-                    let angle = 0;
-                    setInterval(() => {
-                        angle += 0.04;
-                        try {
-                            const radius = 3 + Math.sin(angle) * 1.5;
-                            const opacity = 0.5 + Math.sin(angle * 0.7 + 1) * 0.25;
-                            map.setPaintProperty('trees-layer', 'circle-radius', radius);
-                            map.setPaintProperty('trees-layer', 'circle-opacity', opacity);
-                        } catch (e) {}
-                    }, 120);
+                initGroupPositions(center);
+                addVisibleMarkers(center);
 
-                    // Piétons animés
-                    map.addSource('pedestrians', {
-                        type: 'geojson',
-                        data: generatePedestrians()
-                    });
-                    map.addLayer({
-                        id: 'pedestrians-layer',
-                        type: 'circle',
-                        source: 'pedestrians',
-                        paint: {
-                            'circle-radius': 3,
-                            'circle-color': '#4facfe',
-                            'circle-opacity': 0.8,
-                            'circle-stroke-color': '#ffffff',
-                            'circle-stroke-width': 1,
-                        }
-                    });
+                document.getElementById('currentCity').textContent = userProfile.commune + ' · ' + center[0].toFixed(4) +
+                ', ' + center[1].toFixed(4);
+                setTimeout(() => map.invalidateSize(), 300);
+                window.addEventListener('resize', () => setTimeout(() => map.invalidateSize(), 200));
 
-                    let pedData = generatePedestrians().features;
-                    setInterval(() => {
-                        pedData = pedData.map(p => {
-                            const lat = p.geometry.coordinates[1] + (Math.random() - 0.5) * 0.0005;
-                            const lng = p.geometry.coordinates[0] + (Math.random() - 0.5) * 0.0005;
-                            return {
-                                type: 'Feature',
-                                geometry: { type: 'Point', coordinates: [lng, lat] },
-                                properties: {}
-                            };
-                        });
-                        try {
-                            map.getSource('pedestrians').setData({
-                                type: 'FeatureCollection',
-                                features: pedData
-                            });
-                        } catch (e) {}
-                    }, 500);
-
-                    // Marqueurs des groupes
-                    initGroupPositions(center);
-                    addGroupMarkers();
-
-                    document.querySelectorAll('.city-zoom button').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            const lat = parseFloat(this.dataset.lat);
-                            const lng = parseFloat(this.dataset.lng);
-                            map.flyTo({
-                                center: [lng, lat],
-                                zoom: 15.5,
-                                pitch: 55,
-                                duration: 1800
-                            });
-                            showToast('📍 ' + this.textContent, 'info');
-                            playSquelch(0.06);
-                        });
-                    });
-
-                    applyTheme();
-                });
-
-                map.addControl(new mapboxgl.NavigationControl({
-                    showCompass: true,
-                    showZoom: true,
-                    visualizePitch: true
-                }));
-
-                setTimeout(() => map.resize(), 300);
+                setInterval(simulateGroupMovement, 3000);
             }
 
-            // =========================================================
-            // 11. GÉNÉRATEURS
-            // =========================================================
-            function generateTrees() {
-                const cities = [
-                    [-18.8792, 47.5079],
-                    [-15.7167, 46.3167],
-                    [-12.2833, 49.2833],
-                    [-18.1523, 49.4023],
-                    [-13.3125, 48.2625],
-                    [-21.4333, 47.0833],
-                    [-23.35, 43.6667]
-                ];
-                const features = [];
-                cities.forEach(city => {
-                    for (let i = 0; i < 25; i++) {
-                        features.push({
-                            type: 'Feature',
-                            geometry: {
-                                type: 'Point',
-                                coordinates: [
-                                    city[1] + (Math.random() - 0.5) * 0.06,
-                                    city[0] + (Math.random() - 0.5) * 0.06
-                                ]
-                            },
-                            properties: {}
-                        });
-                    }
-                });
-                return { type: 'FeatureCollection', features };
-            }
-
-            function generatePedestrians() {
-                const cities = [
-                    [-18.8792, 47.5079],
-                    [-15.7167, 46.3167],
-                    [-12.2833, 49.2833],
-                    [-18.1523, 49.4023],
-                    [-13.3125, 48.2625]
-                ];
-                const features = [];
-                cities.forEach(city => {
-                    for (let i = 0; i < 8; i++) {
-                        features.push({
-                            type: 'Feature',
-                            geometry: {
-                                type: 'Point',
-                                coordinates: [
-                                    city[1] + (Math.random() - 0.5) * 0.02,
-                                    city[0] + (Math.random() - 0.5) * 0.02
-                                ]
-                            },
-                            properties: {}
-                        });
-                    }
-                });
-                return { type: 'FeatureCollection', features };
-            }
-
-            // =========================================================
-            // 12. GROUPES SUR LA CARTE
-            // =========================================================
             function initGroupPositions(center) {
                 groupPositions = {
                     police: { lat: center[0] + 0.003, lng: center[1] + 0.002 },
                     gendarmerie: { lat: center[0] - 0.002, lng: center[1] + 0.004 },
-                    groupeA: { lat: center[0] + 0.004, lng: center[1] - 0.003 },
-                    groupeB: { lat: center[0] - 0.001, lng: center[1] - 0.004 },
-                    groupeC: { lat: center[0] + 0.005, lng: center[1] + 0.003 },
+                    volontaire1: { lat: center[0] + 0.004, lng: center[1] - 0.002 },
+                    volontaire2: { lat: center[0] - 0.001, lng: center[1] - 0.003 },
+                    famille1: { lat: center[0] + 0.005, lng: center[1] + 0.003 },
+                    famille2: { lat: center[0] - 0.003, lng: center[1] + 0.005 },
                 };
             }
 
-            function addGroupMarkers() {
-                const markers = [
-                    { id: 'police', pos: groupPositions.police, emoji: '🚔', color: '#f5c842', label: 'Police',
-                        visible: peutVoir('police') },
-                    { id: 'gendarmerie', pos: groupPositions.gendarmerie, emoji: '⭐', color: '#8e44ad',
-                        label: 'Gendarmerie', visible: peutVoir('gendarmerie') },
-                    { id: 'groupeA', pos: groupPositions.groupeA, emoji: '🔴', color: '#e74c3c', label: 'Groupe A',
-                        visible: peutVoir('groupeA') },
-                    { id: 'groupeB', pos: groupPositions.groupeB, emoji: '🟢', color: '#2ecc71', label: 'Groupe B',
-                        visible: peutVoir('groupeB') },
-                    { id: 'groupeC', pos: groupPositions.groupeC, emoji: '🔵', color: '#3498db', label: 'Groupe C',
-                        visible: peutVoir('groupeC') },
-                ];
+            function addVisibleMarkers(center) {
+                for (const key in groupMarkers) {
+                    if (map && groupMarkers[key]) map.removeLayer(groupMarkers[key]);
+                }
+                groupMarkers = {};
 
-                markers.forEach(m => {
-                    if (!m.visible) return;
-                    const el = document.createElement('div');
-                    el.className = 'custom-marker';
-                    el.innerHTML = `
-                        <div class="marker-content">
-                            <div class="marker-icon" style="background:${m.color};">
-                                <span>${m.emoji}</span>
-                            </div>
-                            <div class="marker-label">${m.label}</div>
+                if (peutVoir('police')) {
+                    groupMarkers['police'] = addMarkerToMap(
+                        groupPositions.police.lat, groupPositions.police.lng,
+                        '🚔', '#f5c842', 'Police', 'Poste de police'
+                    );
+                }
+                if (peutVoir('gendarmerie')) {
+                    groupMarkers['gendarmerie'] = addMarkerToMap(
+                        groupPositions.gendarmerie.lat, groupPositions.gendarmerie.lng,
+                        '⭐', '#8e44ad', 'Gendarmerie', 'Brigade'
+                    );
+                }
+                if (peutVoir('volontaire')) {
+                    groupMarkers['volontaire1'] = addMarkerToMap(
+                        groupPositions.volontaire1.lat, groupPositions.volontaire1.lng,
+                        '🟢', '#2ecc71', 'Volontaire', 'Ronde active'
+                    );
+                    groupMarkers['volontaire2'] = addMarkerToMap(
+                        groupPositions.volontaire2.lat, groupPositions.volontaire2.lng,
+                        '🟢', '#2ecc71', 'Volontaire', 'Ronde active'
+                    );
+                }
+                if (peutVoir('famille') && userProfile.type === 'civil' && familyCode) {
+                    groupMarkers['famille1'] = addMarkerToMap(
+                        groupPositions.famille1.lat, groupPositions.famille1.lng,
+                        '🔵', '#3498db', 'Famille: Marie', 'En ligne'
+                    );
+                    groupMarkers['famille2'] = addMarkerToMap(
+                        groupPositions.famille2.lat, groupPositions.famille2.lng,
+                        '🔵', '#3498db', 'Famille: Sophie', 'En ligne'
+                    );
+                }
+            }
+
+            function addMarkerToMap(lat, lng, emoji, color, name, subtitle) {
+                const icon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `
+                        <div style="background:${color};width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 4px 15px rgba(0,0,0,0.5);font-size:18px;">
+                            <span style="transform:rotate(45deg);">${emoji}</span>
                         </div>
-                    `;
-                    const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
-                        .setLngLat([m.pos.lng, m.pos.lat])
-                        .addTo(map);
-                    groupMarkers[m.id] = marker;
+                        <div style="background:rgba(0,0,0,0.8);color:#fff;font-size:8px;font-weight:700;padding:2px 6px;border-radius:3px;margin-top:2px;text-align:center;white-space:nowrap;">${name}</div>`,
+                    iconSize: [38, 50],
+                    iconAnchor: [19, 50],
+                    popupAnchor: [0, -50]
+                });
+                return L.marker([lat, lng], { icon }).addTo(map)
+                    .bindPopup(`<b>${name}</b><br>${subtitle}<br>📍 En service`);
+            }
+
+            function simulateGroupMovement() {
+                const keys = ['police', 'gendarmerie', 'volontaire1', 'volontaire2', 'famille1', 'famille2'];
+                keys.forEach(key => {
+                    if (groupMarkers[key] && groupPositions[key]) {
+                        groupPositions[key].lat += (Math.random() - 0.5) * 0.001;
+                        groupPositions[key].lng += (Math.random() - 0.5) * 0.001;
+                        groupMarkers[key].setLatLng([groupPositions[key].lat, groupPositions[key].lng]);
+                    }
                 });
             }
 
             // =========================================================
-            // 13. GÉOLOCALISATION
+            // 15. GÉOLOCALISATION + TOGGLE POSITION
             // =========================================================
             function getUserLocation() {
-                if (!navigator.geolocation) return;
+                if (!navigator.geolocation) {
+                    showToast('⚠️ GPS non disponible', 'error');
+                    return;
+                }
+
                 navigator.geolocation.getCurrentPosition(
-                    pos => { userLat = pos.coords.latitude;
-                        userLng = pos.coords.longitude; },
-                    () => { userLat = -15.7167;
-                        userLng = 46.3167; },
-                    { enableHighAccuracy: false, timeout: 10000 }
+                    pos => {
+                        userLat = pos.coords.latitude;
+                        userLng = pos.coords.longitude;
+                    },
+                    err => {
+                        userLat = -15.7167;
+                        userLng = 46.3167;
+                    },
+                    { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
                 );
+
                 navigator.geolocation.watchPosition(
                     pos => {
                         userLat = pos.coords.latitude;
                         userLng = pos.coords.longitude;
                         if (positionShared && userMarker) {
-                            userMarker.setLngLat([userLng, userLat]);
+                            userMarker.setLatLng([userLat, userLng]);
                         }
                     },
                     null,
@@ -1851,126 +1436,174 @@
 
             window.toggleMyPosition = function() {
                 if (!userLat || !userLng) {
-                    showToast('⚠️ GPS non disponible', 'error');
+                    showToast('⚠️ Position GPS non disponible', 'error');
+                    getUserLocation();
                     return;
                 }
 
+                const toggle = document.getElementById('positionToggle');
+
                 if (positionShared) {
-                    if (userMarker) { userMarker.remove();
-                        userMarker = null; }
+                    if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
                     positionShared = false;
-                    document.getElementById('btnLocate').classList.remove('active');
+                    toggle.classList.remove('active');
+                    document.getElementById('toggleText').textContent = 'Montrer ma position';
+                    document.querySelector('.toggle-dot').textContent = '👁️';
                     showToast('🔒 Position masquée', 'info');
-                    addTwMessage('🔄 Système', '🔒 Position masquée', 'system');
-                    playSquelch(0.08);
+                    addTwMessage('🔄 Système', '🔒 ' + userProfile.name + ' a masqué sa position', 'system');
+                    playSquelch(0.1);
                 } else {
                     const info = MATRICE[userProfile.type];
-                    const el = document.createElement('div');
-                    el.className = 'custom-marker';
-                    el.innerHTML = `
-                        <div class="marker-content">
-                            <div class="marker-icon" style="background:${info.couleur};width:34px;height:34px;border:3px solid #fff;box-shadow:0 4px 25px rgba(231,76,60,0.6);font-size:18px;">
-                                <span>📍</span>
+                    const color = info.couleur;
+
+                    const icon = L.divIcon({
+                        className: 'custom-marker',
+                        html: `
+                            <div style="background:${color};width:40px;height:40px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:3px solid #fff;box-shadow:0 4px 25px rgba(231,76,60,0.8);font-size:20px;animation:pulse 1.5s infinite;">
+                                <span style="transform:rotate(45deg);">📍</span>
                             </div>
-                            <div class="marker-label" style="background:rgba(0,0,0,0.85);padding:2px 6px;border-radius:3px;border:1px solid ${info.couleur};font-size:7px;">${userProfile.name}</div>
-                        </div>
-                    `;
-                    userMarker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
-                        .setLngLat([userLng, userLat])
-                        .addTo(map);
-                    map.flyTo({ center: [userLng, userLat], zoom: 16, pitch: 55, duration: 1200 });
+                            <div style="background:rgba(0,0,0,0.85);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;margin-top:2px;text-align:center;white-space:nowrap;border:1px solid ${color};">${userProfile.name} · ${info.emoji} ${info.nom}</div>`,
+                        iconSize: [44, 58],
+                        iconAnchor: [22, 58],
+                        popupAnchor: [0, -58]
+                    });
+
+                    userMarker = L.marker([userLat, userLng], { icon }).addTo(map)
+                        .bindPopup(
+                            `<b style="color:${color};">📍 ${userProfile.name}</b><br>${info.emoji} ${info.nom}<br>🟢 Position active`)
+                        .openPopup();
+
+                    map.setView([userLat, userLng], 16);
                     positionShared = true;
-                    document.getElementById('btnLocate').classList.add('active');
-                    showToast('🟢 Position activée', 'success');
-                    addTwMessage('🔄 Système', '📍 Position activée', 'system');
-                    playSquelch(0.12);
+                    toggle.classList.add('active');
+                    document.getElementById('toggleText').textContent = '🟢 POSITION ACTIVE';
+                    document.querySelector('.toggle-dot').textContent = '🟢';
+                    showToast('🟢 Position activée !', 'success');
+                    addTwMessage('🔄 Système', '📍 ' + userProfile.name + ' a activé sa position', 'system');
+                    playSquelch(0.15);
+
+                    if (useFirebase && db) {
+                        db.ref('positions/' + getUserId()).set({
+                            lat: userLat,
+                            lng: userLng,
+                            name: userProfile.name,
+                            type: userProfile.type,
+                            timestamp: Date.now()
+                        });
+                    }
                 }
             };
 
             // =========================================================
-            // 14. ACTIONS GROUPES
+            // 16. ACTIONS GROUPES (AVEC BRUITAGES)
             // =========================================================
             window.showOnMap = function(team) {
-                const pos = groupPositions[team] || { lat: -15.7167, lng: 46.3167 };
-                map.flyTo({ center: [pos.lng, pos.lat], zoom: 16.5, pitch: 55, duration: 1200 });
-                showToast('📍 ' + team, 'info');
-                playSquelch(0.06);
+                const positions = {
+                    police: groupPositions.police || [-15.7147, 46.3187],
+                    gendarmerie: groupPositions.gendarmerie || [-15.7187, 46.3197],
+                    volontaire: groupPositions.volontaire1 || [-15.7197, 46.3137],
+                    civil: [-15.7157, 46.3177]
+                };
+                const pos = positions[team] || [-15.7167, 46.3167];
+                map.setView(Array.isArray(pos) ? pos : [pos.lat, pos.lng], 17);
+                showToast('📍 ' + team + ' localisé', 'info');
+                playSquelch(0.08);
             };
 
+            // APPEL AVEC BRUITAGES RÉALISTES
             window.callTeam = function(team) {
-                showToast('📡 Appel ' + team, 'info');
-                addTwMessage('🔄 Système', '📡 Appel ' + team + '...', 'system');
-                simulerTransmission(1500);
+                showToast('📡 Appel vers ' + team + '...', 'info');
+                addTwMessage('🔄 Système', '📡 Appel du ' + team + ' en cours...', 'system');
+                
+                // SIMULATION COMPLÈTE D'UN APPEL TALKIE
+                simulerTransmission('Appel ' + team, 2500);
+                
                 setTimeout(() => {
                     addTwMessage(team, '✅ Réponse reçue', '');
-                    showToast('✅ Réponse', 'success');
-                    playSquelch(0.1);
-                }, 1500);
+                    showToast('✅ ' + team + ' a répondu', 'success');
+                    playSquelch(0.15);
+                }, 2500);
+            };
+
+            window.showFamilyOnMap = function(lat, lng, name) {
+                map.setView([lat, lng], 17);
+                showToast('📍 ' + name + ' localisé', 'info');
+                playSquelch(0.08);
+            };
+
+            window.messageFamily = function(name) {
+                const msg = prompt('Message pour ' + name + ' :');
+                if (msg) {
+                    addTwMessage('💬 Vous → ' + name, msg, 'famille');
+                    showToast('✅ Message envoyé à ' + name, 'success');
+                    playPTTClick();
+                }
             };
 
             // =========================================================
-            // 15. THEME JOUR/NUIT
+            // 17. MESSAGES TALKIE
             // =========================================================
-            function applyTheme() {
-                const toggle = document.getElementById('themeToggle');
-                const icon = document.getElementById('themeIcon');
-                const mapEl = document.getElementById('map');
-
-                if (isNight) {
-                    icon.textContent = '🌙';
-                    toggle.classList.add('night');
-                    mapEl.style.filter = 'brightness(0.6) saturate(0.7) contrast(1.2)';
-                    document.body.style.background = '#050510';
-                    try {
-                        map.setPaintProperty('pedestrians-layer', 'circle-color', '#ffd700');
-                        map.setPaintProperty('pedestrians-layer', 'circle-radius', 4);
-                    } catch (e) {}
-                } else {
-                    icon.textContent = '☀️';
-                    toggle.classList.remove('night');
-                    mapEl.style.filter = 'brightness(1) saturate(1) contrast(1)';
-                    document.body.style.background = '#0b1725';
-                    try {
-                        map.setPaintProperty('pedestrians-layer', 'circle-color', '#4facfe');
-                        map.setPaintProperty('pedestrians-layer', 'circle-radius', 3);
-                    } catch (e) {}
-                }
-            }
-
-            document.getElementById('themeToggle').addEventListener('click', function() {
-                isNight = !isNight;
-                applyTheme();
-            });
-
-            (function() {
-                const h = new Date().getHours();
-                isNight = (h >= 19 || h < 6);
-                setTimeout(applyTheme, 500);
-            })();
-
-            // =========================================================
-            // 16. TALKIE-WALKIE
-            // =========================================================
-            function addTwMessage(who, text, cls) {
+            function addTwMessage(who, text, cls, roleEmetteur) {
                 const container = document.getElementById('twMessages');
                 const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                const div = document.createElement('div');
-                div.className = 'tw-msg';
-                div.innerHTML =
-                    `<span class="who ${cls || ''}">${who}</span> <span class="time">${time}</span> — ${text}`;
-                container.appendChild(div);
-                container.scrollTop = container.scrollHeight;
-                while (container.children.length > 50) container.removeChild(container.firstChild);
+                const messageData = {
+                    who: who,
+                    text: text,
+                    cls: cls || '',
+                    time: time,
+                    roleEmetteur: roleEmetteur || userProfile?.type || 'system'
+                };
+
+                allMessages.push(messageData);
+
+                if (peutVoir(messageData.roleEmetteur) || messageData.roleEmetteur === 'system' || messageData
+                    .roleEmetteur === 'alert') {
+                    const div = document.createElement('div');
+                    div.className = 'tw-msg';
+                    const info = MATRICE[messageData.roleEmetteur];
+                    const emoji = info ? info.emoji : '';
+                    div.innerHTML =
+                        `<span class="who ${messageData.cls || ''}">${emoji} ${messageData.who}</span> <span class="time">${messageData.time}</span> — ${messageData.text}`;
+                    container.appendChild(div);
+                    container.scrollTop = container.scrollHeight;
+                    while (container.children.length > 50) container.removeChild(container.firstChild);
+                }
+
+                if (useFirebase && db) {
+                    db.ref('messages').push({
+                        who: who,
+                        text: text,
+                        cls: cls || '',
+                        timestamp: Date.now(),
+                        userId: getUserId(),
+                        type: userProfile?.type
+                    });
+                }
             }
             window.addTwMessage = addTwMessage;
 
+            // =========================================================
+            // 18. PEERJS AUDIO
+            // =========================================================
+            function getPeerId() {
+                let id = localStorage.getItem('fokon_peer_id');
+                if (!id) {
+                    id = 'tw_' + Math.random().toString(36).substr(2, 8);
+                    localStorage.setItem('fokon_peer_id', id);
+                }
+                return id;
+            }
+
             function initPeerJS() {
                 peerId = getPeerId();
+
                 try {
                     peer = new Peer(peerId, {
                         config: {
                             iceServers: [
                                 { urls: 'stun:stun.l.google.com:19302' },
+                                { urls: 'stun:stun1.l.google.com:19302' },
+                                { urls: 'stun:stun2.l.google.com:19302' },
                                 { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject',
                                     credential: 'openrelayproject' },
                                 { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject',
@@ -1979,25 +1612,51 @@
                         },
                         debug: 0
                     });
+
                     peer.on('open', (id) => {
-                        document.getElementById('twChannel').textContent = '🔓 ID: ' + id.substring(0, 8);
-                        document.getElementById('twStatus').textContent = '🎙️ Prêt';
-                        addTwMessage('🔄 Système', '🎙️ ID: ' + id.substring(0, 8), 'system');
-                        playSquelch(0.12);
+                        console.log('🔊 PeerJS connecté:', id);
+                        document.getElementById('twChannel').textContent = '🔓 ID: ' + id.substring(0, 10);
+                        document.getElementById('twStatus').textContent = '🎙️ Prêt · ID: ' + id.substring(0, 8);
+                        showToast('🔊 Talkie-Walkie prêt !', 'success');
+                        addTwMessage('🔄 Système', '🎙️ Votre ID: ' + id.substring(0, 10), 'system');
+                        playSquelch(0.2);
                     });
+
                     peer.on('call', (call) => {
-                        addTwMessage('📞 Appel', 'Appel entrant', 'system');
-                        simulerTransmission(1000);
-                        navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true,
-                                noiseSuppression: true } })
-                            .then(stream => {
-                                localStream = stream;
-                                call.answer(stream);
-                                startCall(call);
-                            })
-                            .catch(() => showToast('⚠️ Erreur micro', 'error'));
+                        const callerRole = call.metadata?.role || 'volontaire';
+                        if (!peutParler(callerRole) && callerRole !== userProfile?.type) {
+                            addTwMessage('🔒 Bloqué', 'Appel de ' + call.peer + ' refusé (droits)', 'system');
+                            showToast('🔒 Appel refusé', 'error');
+                            return;
+                        }
+
+                        addTwMessage('📞 Appel', 'Appel entrant de ' + call.peer, 'system');
+                        simulerTransmission('Appel entrant', 1500);
+
+                        navigator.mediaDevices.getUserMedia({
+                            audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 }
+                        })
+                        .then((stream) => {
+                            localStream = stream;
+                            call.answer(stream);
+                            startCall(call);
+                        })
+                        .catch((err) => {
+                            showToast('⚠️ Erreur micro: ' + err.message, 'error');
+                        });
                     });
-                } catch (e) { console.warn('PeerJS non disponible'); }
+
+                    peer.on('error', (err) => {
+                        console.error('Erreur PeerJS:', err);
+                        if (err.message.includes('ID')) {
+                            localStorage.removeItem('fokon_peer_id');
+                            setTimeout(() => location.reload(), 1000);
+                        }
+                    });
+
+                } catch (e) {
+                    console.warn('PeerJS non disponible');
+                }
             }
 
             function startCall(call) {
@@ -2006,40 +1665,36 @@
                 document.getElementById('twSpeak').disabled = true;
                 document.getElementById('twListen').disabled = true;
                 document.getElementById('twStop').disabled = false;
+                document.getElementById('twStatus').textContent = '🔊 En communication';
                 document.getElementById('audioIndicator').className = 'audio-indicator active';
                 addTwMessage('🔊 Communication', 'Appel établi', 'system');
-                playSquelch(0.1);
+                playSquelch(0.15);
 
                 call.on('stream', (stream) => {
                     const audio = new Audio();
                     audio.srcObject = stream;
-                    audio.play().catch(() => {});
-                    const ctx = new AudioContext();
-                    const source = ctx.createMediaStreamSource(stream);
-                    const analyser = ctx.createAnalyser();
-                    analyser.fftSize = 128;
+                    audio.play().catch(e => {});
+                    const audioCtx = new AudioContext();
+                    const source = audioCtx.createMediaStreamSource(stream);
+                    const analyser = audioCtx.createAnalyser();
+                    analyser.fftSize = 256;
                     source.connect(analyser);
-                    const data = new Uint8Array(analyser.frequencyBinCount);
+                    const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-                    function animate() {
+                    function animateAudio() {
                         if (!isCallActive) return;
-                        analyser.getByteFrequencyData(data);
+                        analyser.getByteFrequencyData(dataArray);
                         let sum = 0;
-                        for (let i = 0; i < data.length; i++) sum += data[i];
-                        const avg = sum / data.length;
-                        const bars = document.querySelectorAll('.audio-wave span');
-                        const h = Math.min(14, Math.max(3, avg / 255 * 14));
-                        bars.forEach((bar) => {
-                            bar.style.height = Math.max(3, h * (0.5 + Math.random() * 0.5)) + 'px';
-                            bar.classList.add('active');
-                        });
-                        requestAnimationFrame(animate);
+                        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+                        const avg = sum / dataArray.length;
+                        updateAudioWave(Math.min(1, avg / 255 * 2));
+                        requestAnimationFrame(animateAudio);
                     }
-                    animate();
+                    animateAudio();
                 });
 
                 call.on('close', () => endCall('🔚 Appel terminé'));
-                call.on('error', () => endCall('❌ Erreur'));
+                call.on('error', () => endCall('❌ Erreur de communication'));
             }
 
             function endCall(reason) {
@@ -2051,31 +1706,76 @@
                 document.getElementById('twSpeak').disabled = false;
                 document.getElementById('twListen').disabled = false;
                 document.getElementById('twStop').disabled = true;
+                document.getElementById('twStatus').textContent = '🔗 Déconnecté';
                 document.getElementById('audioIndicator').className = 'audio-indicator';
-                document.querySelectorAll('.audio-wave span').forEach(b => { b.style.height = '4px';
-                    b.classList.remove('active'); });
+                resetAudioWave();
                 stopRadioStatic();
-                if (reason) { addTwMessage('🔄 Système', reason, 'system');
-                    showToast(reason, 'info'); }
+                playSquelch(0.15);
+                if (reason) {
+                    addTwMessage('🔄 Système', reason, 'system');
+                    showToast(reason, 'info');
+                }
             }
 
+            function updateAudioWave(level) {
+                const bars = document.querySelectorAll('.audio-wave span');
+                const h = Math.min(20, Math.max(4, level * 20));
+                bars.forEach((bar) => {
+                    bar.style.height = Math.max(4, h * (0.5 + Math.random() * 0.5)) + 'px';
+                    bar.classList.add('active');
+                });
+            }
+
+            function resetAudioWave() {
+                const bars = document.querySelectorAll('.audio-wave span');
+                const heights = [6, 12, 18, 10, 14];
+                bars.forEach((bar, i) => {
+                    bar.style.height = heights[i] + 'px';
+                    bar.classList.remove('active');
+                });
+            }
+
+            // =========================================================
+            // 19. BOUTONS TALKIE
+            // =========================================================
             document.getElementById('twSpeak').addEventListener('click', function() {
-                if (isCallActive) { showToast('⚠️ Déjà en comm', 'error'); return; }
+                if (isCallActive) { showToast('⚠️ Déjà en communication', 'error'); return; }
+
+                if (!isOnline) {
+                    this.classList.add('recording');
+                    document.getElementById('audioIndicator').className = 'audio-indicator recording';
+                    addTwMessage('📢 Vous', 'Message vocal (simulation)', '');
+                    simulerTransmission('Vous', 2000);
+                    setTimeout(() => {
+                        this.classList.remove('recording');
+                        document.getElementById('audioIndicator').className = 'audio-indicator';
+                        showToast('✅ Message envoyé', 'success');
+                    }, 2000);
+                    return;
+                }
+
                 const targetId = prompt('Entrez l\'ID de l\'autre appareil:\n(Votre ID: ' + peerId + ')');
-                if (!targetId || targetId === peerId) return;
+                if (!targetId) return;
+                if (targetId === peerId) { showToast('⚠️ Auto-appel impossible', 'error'); return; }
+
                 this.disabled = true;
                 this.classList.add('recording');
-                addTwMessage('📞 Appel', 'Appel vers ' + targetId, 'system');
-                simulerTransmission(1000);
-                navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
-                    .then(stream => {
-                        localStream = stream;
-                        const call = peer.call(targetId, stream, { metadata: { role: userProfile?.type } });
-                        startCall(call);
-                    })
-                    .catch(() => { showToast('❌ Erreur micro', 'error');
-                        this.disabled = false;
-                        this.classList.remove('recording'); });
+                addTwMessage('📞 Appel', 'Appel vers ' + targetId + '...', 'system');
+                simulerTransmission('Appel', 1500);
+
+                navigator.mediaDevices.getUserMedia({
+                    audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 }
+                })
+                .then((stream) => {
+                    localStream = stream;
+                    const call = peer.call(targetId, stream, { metadata: { role: userProfile?.type } });
+                    startCall(call);
+                })
+                .catch((err) => {
+                    showToast('❌ Erreur micro: ' + err.message, 'error');
+                    this.disabled = false;
+                    this.classList.remove('recording');
+                });
             });
 
             document.getElementById('twListen').addEventListener('click', function() {
@@ -2085,132 +1785,124 @@
                     if (listenInterval) { clearInterval(listenInterval);
                         listenInterval = null; }
                     stopRadioStatic();
-                    document.getElementById('twStatus').textContent = '🔇 Arrêté';
+                    document.getElementById('twStatus').textContent = '🔇 Écoute désactivée';
+                    showToast('🔇 Écoute désactivée', 'info');
                 } else {
                     this.classList.add('listening');
                     this.textContent = '⏹️ Écoute...';
                     document.getElementById('twStatus').textContent = '🎧 Écoute active';
-                    playRadioStatic(0.04);
-                    playSquelch(0.06);
+                    showToast('🎧 Écoute active', 'success');
+                    playRadioStatic(0.05);
+                    playSquelch(0.1);
+
                     listenInterval = setInterval(() => {
-                        if (this.classList.contains('listening')) {
+                        if (this.classList.contains('listening') && isOnline) {
                             const msgs = [
-                                { who: 'Groupe A', text: 'Patrouille nord OK', cls: 'gA' },
-                                { who: 'Groupe B', text: 'Rondes actives sud', cls: 'gB' },
-                                { who: 'Groupe C', text: 'Intervention est en cours', cls: 'gC' },
+                                { who: 'Volontaire', text: 'Rondes OK · secteur sud', cls: '', role: 'volontaire' },
+                                { who: 'Volontaire', text: 'Présence normale · marché', cls: '', role: 'volontaire' },
                             ];
                             const r = msgs[Math.floor(Math.random() * msgs.length)];
-                            addTwMessage(r.who, r.text, r.cls);
-                            playSquelch(0.05);
+                            addTwMessage(r.who, r.text, r.cls, r.role);
+                            playSquelch(0.08);
                         }
-                    }, 4000);
+                    }, 5000);
                 }
             });
 
             document.getElementById('twStop').addEventListener('click', function() {
-                if (isCallActive) endCall('🔚 Raccroché');
+                if (isCallActive) endCall('🔚 Vous avez raccroché');
             });
 
             document.getElementById('twClear').addEventListener('click', function() {
                 document.getElementById('twMessages').innerHTML = '';
-                addTwMessage('🔄 Système', '🗑️ Effacé', 'system');
+                allMessages = [];
+                addTwMessage('🔄 Système', '🗑️ Messages effacés', 'system');
                 playPTTClick();
             });
 
             // =========================================================
-            // 17. ALERTE
+            // 20. ALERTE (AVEC SON)
             // =========================================================
             document.getElementById('btnAlert').addEventListener('click', function() {
-                if (alertActive) { showToast('⚠️ Alerte en cours', 'error'); return; }
-                if (!userLat || !userLng) { showToast('⚠️ GPS non disponible', 'error'); return; }
+                if (alertActive) { showToast('⚠️ Alerte déjà en cours', 'error'); return; }
+                if (!userLat || !userLng) { showToast('⚠️ Position GPS non disponible', 'error');
+                    getUserLocation(); return; }
+
                 if (!positionShared) { window.toggleMyPosition(); }
 
                 alertActive = true;
                 this.disabled = true;
-                this.innerHTML = '🚨 ALERTE... <span class="sub">⏳ Intervention</span>';
+                this.innerHTML = '🚨 ALERTE EN COURS... <span class="sub">⏳ Intervention</span>';
 
+                // JOUER LE SON D'ALERTE
                 playAlertSound();
 
-                const el = document.createElement('div');
-                el.className = 'alert-marker';
-                el.innerHTML = '🚨<span class="label">ALERTE</span>';
-                const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
-                    .setLngLat([userLng, userLat])
-                    .addTo(map);
+                const alertIcon = L.divIcon({
+                    className: 'alert-marker',
+                    html: '🚨<span class="label">ALERTE</span>',
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 40]
+                });
+                const marker = L.marker([userLat, userLng], { icon: alertIcon }).addTo(map);
+                marker.bindPopup(
+                    `<b>🚨 ALERTE URGENCE</b><br>📍 ${userLat.toFixed(5)}, ${userLng.toFixed(5)}<br>👤 ${userProfile.name}<br>🕐 ${new Date().toLocaleTimeString()}`
+                ).openPopup();
 
-                const circleData = {
-                    type: 'Feature',
-                    geometry: { type: 'Point', coordinates: [userLng, userLat] },
-                    properties: {}
-                };
-                try {
-                    map.addSource('alert-circle', {
-                        type: 'geojson',
-                        data: { type: 'FeatureCollection', features: [circleData] }
+                const circle = L.circle([userLat, userLng], {
+                    radius: 50,
+                    color: '#e74c3c',
+                    fillColor: '#e74c3c',
+                    fillOpacity: 0.3,
+                    weight: 2,
+                    className: 'alert-circle'
+                }).addTo(map);
+                let radius = 50;
+                const growInterval = setInterval(() => {
+                    radius += 15;
+                    circle.setRadius(radius);
+                    circle.setStyle({
+                        fillOpacity: Math.max(0, 0.3 - (radius / 500)),
+                        weight: Math.max(0.5, 2 - (radius / 200))
                     });
-                    map.addLayer({
-                        id: 'alert-circle-layer',
-                        type: 'circle',
-                        source: 'alert-circle',
-                        paint: {
-                            'circle-radius': 15,
-                            'circle-color': '#e74c3c',
-                            'circle-opacity': 0.4,
-                            'circle-stroke-color': '#e74c3c',
-                            'circle-stroke-width': 2,
-                        }
-                    });
-                    let r = 15;
-                    const grow = setInterval(() => {
-                        r += 8;
-                        try {
-                            map.setPaintProperty('alert-circle-layer', 'circle-radius', r);
-                            map.setPaintProperty('alert-circle-layer', 'circle-opacity', Math.max(0, 0.4 - r /
-                            1000));
-                        } catch (e) {}
-                        if (r > 1000) { clearInterval(grow);
-                            try { map.removeLayer('alert-circle-layer');
-                                map.removeSource('alert-circle'); } catch (e) {} }
-                    }, 60);
-                } catch (e) {}
+                    if (radius > 500) { clearInterval(growInterval);
+                        map.removeLayer(circle); }
+                }, 100);
 
-                addTwMessage('🚨 ALERTE', '🔴 URGENCE · ' + userProfile.name, 'alert');
-                showToast('🚨 ALERTE ENVOYÉE', 'error');
+                addTwMessage('🚨 ALERTE', '🔴 URGENCE · ' + userProfile.name, 'alert', 'alert');
+                showToast('🚨 ALERTE ENVOYÉE !', 'error');
                 if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 500]);
 
                 setTimeout(() => {
-                    addTwMessage('Groupe A', '✅ Reçu ! Intervention', 'gA');
-                    playSquelch(0.1);
-                }, 1200);
+                    addTwMessage('Volontaire', '✅ Reçu ! Intervention en cours', '', 'volontaire');
+                    playSquelch(0.15);
+                }, 1500);
                 setTimeout(() => {
-                    addTwMessage('Groupe B', '✅ En route', 'gB');
-                    playSquelch(0.1);
-                }, 1800);
-                setTimeout(() => {
-                    addTwMessage('Groupe C', '✅ On arrive', 'gC');
-                    playSquelch(0.1);
-                }, 2400);
-                setTimeout(() => {
-                    addTwMessage('🔄 Système', '📡 Forces notifiées', 'system');
-                    playSquelch(0.1);
-                }, 3000);
+                    addTwMessage('🔄 Système', '📡 Forces de l\'ordre notifiées (17 · 112)', 'system');
+                    playSquelch(0.15);
+                }, 2500);
+
+                if (useFirebase && db) {
+                    db.ref('alerts').push({
+                        lat: userLat,
+                        lng: userLng,
+                        name: userProfile.name,
+                        type: userProfile.type,
+                        timestamp: Date.now()
+                    });
+                }
 
                 setTimeout(() => {
                     alertActive = false;
                     this.disabled = false;
-                    this.innerHTML =
-                        '🚨 SIGNALER UNE URGENCE <span class="sub">⚠️ Alerte immédiate · Tous les intervenants</span>';
+                    this.innerHTML = '🚨 SIGNALER UNE URGENCE <span class="sub">⚠️ Alerte immédiate · Tous les intervenants</span>';
                     showToast('✅ Alerte terminée', 'success');
-                    addTwMessage('🔄 Système', '✅ Fin d\'alerte', 'system');
-                    playSquelch(0.1);
-                    try { marker.remove(); } catch (e) {}
-                    try { map.removeLayer('alert-circle-layer');
-                        map.removeSource('alert-circle'); } catch (e) {}
-                }, 25000);
+                    addTwMessage('🔄 Système', '✅ Fin d\'alerte · Restez vigilants', 'system');
+                    playSquelch(0.15);
+                }, 30000);
             });
 
             // =========================================================
-            // 18. RACCOURCIS
+            // 21. RACCOURCIS CLAVIER
             // =========================================================
             document.addEventListener('keydown', function(e) {
                 if (e.altKey && e.key === 'a') { e.preventDefault();
@@ -2219,27 +1911,51 @@
                     document.getElementById('twListen').click(); }
                 if (e.altKey && e.key === 'p') { e.preventDefault();
                     document.getElementById('twSpeak').click(); }
+                if (e.altKey && e.key === 's') { e.preventDefault();
+                    document.getElementById('twStop').click(); }
                 if (e.altKey && e.key === 'v') { e.preventDefault();
                     window.toggleMyPosition(); }
             });
 
             // =========================================================
-            // 19. DÉTECTION CONNEXION
+            // 22. INITIALISATION
             // =========================================================
-            window.addEventListener('online', () => {
-                document.getElementById('offlineBar').classList.remove('show');
-                document.getElementById('statusDot').style.background = '#5dffa0';
-            });
-            window.addEventListener('offline', () => {
-                document.getElementById('offlineBar').classList.add('show');
-                document.getElementById('statusDot').style.background = '#e74c3c';
-            });
+            console.log('🛡️ FOKON\'ALERT — Talkie-Walkie Réaliste');
+            console.log('🔊 Bruitages : Squelch, Bips, Statique, PTT');
+            console.log('🔐 Matrice de visibilité appliquée');
+            console.log('💡 Raccourcis: Alt+A (alerte) Alt+L (écouter) Alt+P (parler) Alt+S (stop) Alt+V (position)');
 
-            console.log('🛡️ FOKON\'ALERT 3D — Groupes A, B, C');
-            console.log('🌳 Arbres animés · Piétons · Bâtiments 3D');
-            console.log('💡 Alt+A=Alert · Alt+L=Écouter · Alt+P=Parler · Alt+V=Position');
+            // =========================================================
+            // 23. RÉCEPTION FIREBASE
+            // =========================================================
+            if (useFirebase && db) {
+                db.ref('messages').limitToLast(10).on('child_added', function(snapshot) {
+                    const data = snapshot.val();
+                    if (data.userId !== getUserId()) {
+                        addTwMessage(data.who, data.text, data.cls, data.type || 'volontaire');
+                        playSquelch(0.06);
+                    }
+                });
+
+                db.ref('alerts').on('child_added', function(snapshot) {
+                    const data = snapshot.val();
+                    if (data.userId !== getUserId() && data.lat && data.lng) {
+                        const alertIcon = L.divIcon({
+                            className: 'alert-marker',
+                            html: '🚨<span class="label">ALERTE</span>',
+                            iconSize: [40, 40],
+                            iconAnchor: [20, 40]
+                        });
+                        const marker = L.marker([data.lat, data.lng], { icon: alertIcon }).addTo(map);
+                        marker.bindPopup(
+                            `<b>🚨 ALERTE</b><br>📍 ${data.lat.toFixed(5)}, ${data.lng.toFixed(5)}<br>👤 ${data.name || 'Inconnu'}<br>🕐 ${new Date(data.timestamp).toLocaleTimeString()}`
+                        ).openPopup();
+                        playAlertSound();
+                    }
+                });
+            }
 
         })();
     </script>
 </body>
-    </html>
+</html>
