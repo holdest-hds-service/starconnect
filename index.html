@@ -4,21 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
     <meta name="theme-color" content="#0b1725" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <title>FOKON'ALERT — Audio + Multi-appareils + Temps réel</title>
+    <title>FOKON'ALERT — 3D Madagascar</title>
 
-    <!-- Leaflet -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Mapbox GL -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.js"></script>
 
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
-    <!-- PeerJS pour l'audio -->
+    <!-- PeerJS -->
     <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
     <style>
+        /* ===== STYLES COMPLETS ===== */
         * {
             margin: 0;
             padding: 0;
@@ -34,8 +34,7 @@
             -webkit-user-select: none;
             user-select: none;
         }
-        
-        /* ═══ BANNIÈRE HORS-LIGNE ═══ */
+
         .offline-bar {
             background: #e67e22;
             color: #fff;
@@ -48,9 +47,10 @@
             top: 0;
             z-index: 1100;
         }
-        .offline-bar.show { display: block; }
+        .offline-bar.show {
+            display: block;
+        }
 
-        /* ═══ HEADER ═══ */
         .header {
             background: linear-gradient(135deg, #0a1e32, #143a57);
             padding: 14px 20px;
@@ -87,10 +87,10 @@
         @keyframes pulse {
             0%,
             100% {
-                opacity: 1;
+                opacity: 1
             }
             50% {
-                opacity: 0.3;
+                opacity: .3
             }
         }
         .header .user-badge {
@@ -116,8 +116,17 @@
             background: #0b1725;
             color: #fff;
         }
+        .btn-logout {
+            background: transparent;
+            border: 1px solid #e74c3c;
+            color: #e74c3c;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.5rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
 
-        /* ═══ BARRE DE LOCALISATION ═══ */
         .loc-bar {
             background: #0f2238;
             padding: 8px 20px;
@@ -144,20 +153,167 @@
             font-weight: 700;
         }
 
-        /* ═══ CARTE ═══ */
         .map-wrapper {
             margin: 12px 16px;
             border-radius: 16px;
             overflow: hidden;
             border: 2px solid #1a3a55;
+            position: relative;
+            height: 340px;
         }
         #map {
-            height: 320px;
             width: 100%;
-            min-height: 220px;
+            height: 100%;
+            background: #0a1520;
+            transition: filter 0.6s ease;
         }
 
-        /* ═══ TITRES DE SECTION ═══ */
+        .map-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .map-controls button {
+            background: rgba(10, 26, 42, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 30px;
+            color: #fff;
+            padding: 6px 12px;
+            font-size: 0.55rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .map-controls button:hover {
+            background: rgba(255, 215, 0, 0.2);
+        }
+        .map-controls button.active {
+            background: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            z-index: 10;
+            background: rgba(10, 26, 42, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 30px;
+            padding: 6px 14px;
+            color: #fff;
+            font-size: 0.6rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        .theme-toggle.night {
+            background: rgba(10, 10, 30, 0.85);
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+        .theme-toggle .toggle-track {
+            width: 32px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            position: relative;
+            transition: all 0.3s;
+        }
+        .theme-toggle.night .toggle-track {
+            background: rgba(255, 215, 0, 0.2);
+        }
+        .theme-toggle .toggle-thumb {
+            width: 14px;
+            height: 14px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s;
+        }
+        .theme-toggle.night .toggle-thumb {
+            left: 16px;
+            background: #ffd700;
+        }
+
+        .map-legend {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            z-index: 10;
+            background: rgba(10, 26, 42, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            padding: 4px 10px;
+            font-size: 0.45rem;
+            color: #8ab4d6;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+        }
+        .map-legend .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin: 1px 0;
+        }
+        .legend-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .city-zoom {
+            position: absolute;
+            bottom: 55px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 4px 8px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            max-width: 92%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        .city-zoom button {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        .city-zoom button:hover {
+            background: rgba(255, 215, 0, 0.2);
+        }
+
         .section-title {
             font-size: 0.7rem;
             font-weight: 700;
@@ -167,7 +323,6 @@
             letter-spacing: 1px;
         }
 
-        /* ═══ LISTE DES GROUPES ═══ */
         .group-list {
             display: flex;
             gap: 10px;
@@ -231,8 +386,22 @@
         .group-card .g-actions button.primary:hover {
             background: #ffd966;
         }
+        .group-card.locked {
+            opacity: 0.5;
+            border-left-color: #555 !important;
+        }
+        .group-card.active-group {
+            border-left-color: #ffd700;
+            background: #1a3a55;
+        }
+        .group-card .g-badge {
+            font-size: 0.5rem;
+            background: rgba(255, 215, 0, 0.2);
+            padding: 0 8px;
+            border-radius: 20px;
+            margin-left: 4px;
+        }
 
-        /* ═══ BOUTON ALERTE ═══ */
         .alert-zone {
             padding: 10px 16px;
         }
@@ -267,7 +436,6 @@
             opacity: 0.8;
         }
 
-        /* ═══ TALKIE-WALKIE ═══ */
         .tw-section {
             background: #0d2236;
             margin: 6px 16px 16px;
@@ -336,11 +504,14 @@
             font-weight: 700;
             color: #f5c842;
         }
-        .tw-msg .who.g2 {
+        .tw-msg .who.gA {
+            color: #e74c3c;
+        }
+        .tw-msg .who.gB {
             color: #2ecc71;
         }
-        .tw-msg .who.g3 {
-            color: #5dade2;
+        .tw-msg .who.gC {
+            color: #3498db;
         }
         .tw-msg .who.system {
             color: #e67e22;
@@ -348,13 +519,21 @@
         .tw-msg .who.alert {
             color: #e74c3c;
         }
+        .tw-msg .who.police {
+            color: #f5c842;
+        }
+        .tw-msg .who.gendarmerie {
+            color: #8e44ad;
+        }
+        .tw-msg .who.civil {
+            color: #3498db;
+        }
         .tw-msg .time {
             color: #4a6a88;
             font-size: 0.55rem;
             margin-left: 8px;
         }
 
-        /* ═══ CONTRÔLES TALKIE ═══ */
         .tw-controls {
             display: flex;
             gap: 8px;
@@ -403,7 +582,6 @@
             margin-top: 8px;
         }
 
-        /* ═══ AUDIO WAVE ═══ */
         .audio-wave {
             display: inline-flex;
             align-items: center;
@@ -423,7 +601,6 @@
             background: #2ecc71;
         }
 
-        /* ═══ TOAST ═══ */
         .toast {
             position: fixed;
             top: 75px;
@@ -465,7 +642,6 @@
             }
         }
 
-        /* ═══ MARQUEURS D'ALERTE ═══ */
         .alert-marker {
             background: none;
             border: none;
@@ -487,40 +663,243 @@
             white-space: nowrap;
         }
         @keyframes alertPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.3); }
+            0%,
+            100% {
+                transform: scale(1)
+            }
+            50% {
+                transform: scale(1.3)
+            }
         }
         .alert-circle {
             animation: circlePulse 1.5s infinite;
         }
         @keyframes circlePulse {
-            0% { opacity: 0.8; r: 50; }
-            100% { opacity: 0; r: 200; }
+            0% {
+                opacity: 0.8;
+                r: 50
+            }
+            100% {
+                opacity: 0;
+                r: 200
+            }
         }
 
-        /* ═══ LÉGENDE ═══ */
-        .map-legend {
+        .position-toggle {
             position: absolute;
-            bottom: 20px;
+            top: 10px;
             left: 10px;
-            z-index: 500;
-            background: rgba(10, 26, 42, 0.9);
-            border-radius: 8px;
-            padding: 6px 10px;
-            font-size: 0.5rem;
-            color: #8ab4d6;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            pointer-events: none;
-        }
-        .map-legend .legend-item {
+            z-index: 10;
+            background: rgba(10, 26, 42, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 25px;
+            padding: 4px 10px;
             display: flex;
             align-items: center;
             gap: 4px;
-            margin: 2px 0;
+            cursor: pointer;
+            font-size: 0.5rem;
+            font-weight: 600;
+            color: #fff;
+            transition: all 0.3s;
+        }
+        .position-toggle.active {
+            background: #e74c3c;
+            border-color: #e74c3c;
+        }
+        .position-toggle .toggle-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.5rem;
+        }
+        .position-toggle.active .toggle-dot {
+            background: #fff;
+            color: #e74c3c;
         }
 
-        /* ═══ RESPONSIVE ═══ */
-        @media (max-width: 600px) {
+        .custom-marker {
+            background: none;
+            border: none;
+        }
+        .custom-marker .marker-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .custom-marker .marker-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            font-size: 16px;
+        }
+        .custom-marker .marker-icon span {
+            transform: rotate(45deg);
+        }
+        .custom-marker .marker-label {
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            font-size: 7px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-top: 2px;
+            text-align: center;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        /* ===== ÉCRAN DE CONNEXION (STYLE ORIGINAL) ===== */
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #0b1725;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+        .login-screen.hidden {
+            display: none;
+        }
+        .login-box {
+            background: #0f2238;
+            border-radius: 20px;
+            padding: 25px 20px;
+            max-width: 420px;
+            width: 100%;
+            border: 1px solid #1a3a55;
+            text-align: center;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .login-box .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+        .login-box .logo span {
+            color: #f5c842;
+        }
+        .login-box .subtitle {
+            font-size: 0.7rem;
+            color: #8ab4d6;
+            margin-bottom: 20px;
+        }
+        .login-box label {
+            display: block;
+            text-align: left;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #8ab4d6;
+            margin-bottom: 4px;
+            margin-top: 12px;
+        }
+        .login-box input,
+        .login-box select {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid #1a3a55;
+            background: #071725;
+            color: #fff;
+            font-size: 0.8rem;
+            font-family: inherit;
+        }
+        .login-box select option {
+            background: #0b1725;
+            color: #fff;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #f5c842, #ffd966);
+            border: none;
+            border-radius: 30px;
+            color: #0b1725;
+            font-size: 0.9rem;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 16px;
+            font-family: inherit;
+        }
+        .btn-login:active {
+            transform: scale(0.96);
+        }
+        .login-info {
+            font-size: 0.5rem;
+            color: #5a7f9e;
+            margin-top: 10px;
+        }
+        .warning-box {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 12px;
+            font-size: 0.55rem;
+            color: #e74c3c;
+            text-align: left;
+            line-height: 1.4;
+        }
+        .family-section {
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 12px;
+            text-align: left;
+            display: none;
+        }
+        .family-section label {
+            color: #3498db;
+            margin-top: 6px;
+        }
+        .family-section .hint {
+            font-size: 0.5rem;
+            color: #5a7f9e;
+            margin-top: 2px;
+        }
+
+        .visibility-banner {
+            padding: 4px 14px;
+            text-align: center;
+            font-size: 0.55rem;
+            border-bottom: 1px solid #1a3a55;
+        }
+        .visibility-banner.civil {
+            background: rgba(52, 152, 219, 0.15);
+            color: #3498db;
+        }
+        .visibility-banner.force {
+            background: rgba(245, 200, 66, 0.1);
+            color: #f5c842;
+        }
+        .visibility-banner.volontaire {
+            background: rgba(46, 204, 113, 0.1);
+            color: #2ecc71;
+        }
+
+        @media (max-width:600px) {
+            .map-wrapper {
+                height: 250px;
+                margin: 8px 10px;
+            }
             .header .logo {
                 font-size: 1rem;
             }
@@ -535,9 +914,6 @@
             .loc-bar .stats {
                 font-size: 0.6rem;
                 gap: 10px;
-            }
-            #map {
-                height: 250px;
             }
             .group-card {
                 min-width: 110px;
@@ -562,37 +938,120 @@
                 padding: 8px 10px;
                 min-width: 50px;
             }
+            .city-zoom {
+                bottom: 45px;
+                padding: 3px 6px;
+                gap: 3px;
+            }
+            .city-zoom button {
+                font-size: 0.45rem;
+                padding: 2px 7px;
+            }
+            .login-box {
+                padding: 20px 16px;
+                max-width: 100%;
+                margin: 0 10px;
+            }
+            .login-box .logo {
+                font-size: 1.2rem;
+            }
+            .login-box input,
+            .login-box select {
+                padding: 8px 12px;
+                font-size: 0.7rem;
+            }
+            .btn-login {
+                padding: 10px;
+                font-size: 0.8rem;
+            }
+        }
+
+        .mapboxgl-popup-content {
+            background: rgba(10, 26, 42, 0.95) !important;
+            backdrop-filter: blur(10px) !important;
+            color: #fff !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 8px !important;
+            padding: 6px 10px !important;
+            font-size: 0.55rem !important;
+        }
+        .mapboxgl-popup-tip {
+            border-top-color: rgba(10, 26, 42, 0.95) !important;
         }
     </style>
 </head>
 <body>
 
-    <!-- ===== BANNIÈRE HORS-LIGNE ===== -->
-    <div class="offline-bar" id="offlineBar">📵 Mode hors-ligne — Fonctions limitées</div>
+    <!-- ===== ÉCRAN DE CONNEXION (STYLE ORIGINAL) ===== -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <div class="logo">🛡️ FOKON'<span>ALERT</span></div>
+            <div class="subtitle">Système de sécurité communautaire · Madagascar 3D</div>
+
+            <label>👤 Type de compte</label>
+            <select id="loginType" onchange="updateLoginInfo()">
+                <option value="police">🚔 Police Nationale</option>
+                <option value="gendarmerie">⭐ Gendarmerie Nationale</option>
+                <option value="groupeA">🔴 Groupe A</option>
+                <option value="groupeB">🟢 Groupe B</option>
+                <option value="groupeC">🔵 Groupe C</option>
+                <option value="civil">🔵 Civil (protection personnelle)</option>
+            </select>
+
+            <label>📛 Votre nom complet</label>
+            <input type="text" id="loginName" placeholder="Ex: Jean Rakoto">
+
+            <label>📍 Votre commune</label>
+            <select id="loginCommune">
+                <option value="majunga">Majunga (Mahajanga)</option>
+                <option value="tana">Antananarivo</option>
+                <option value="tamatave">Toamasina</option>
+                <option value="fianar">Fianarantsoa</option>
+                <option value="diego">Antsiranana</option>
+                <option value="toliara">Toliara</option>
+            </select>
+
+            <label>🔑 Code d'accès</label>
+            <input type="password" id="loginCode" placeholder="Code fourni par l'autorité">
+
+            <div class="family-section" id="familySection">
+                <label>👨‍👩‍👧 Code famille (pour voir vos proches)</label>
+                <input type="text" id="familyCode" placeholder="Ex: FAMILLE_RAKOTO">
+                <div class="hint">💡 Partagez ce code avec votre famille pour vous voir entre vous</div>
+            </div>
+
+            <div class="warning-box" id="loginWarning">
+                🔒 <strong>VISIBILITÉ :</strong> Chaque rôle voit uniquement ce qu'il a le droit de voir sur la carte.
+            </div>
+
+            <button class="btn-login" onclick="doLogin()">🔓 SE CONNECTER</button>
+            <div class="login-info">✅ Codes test: police2024 · gendarmerie2024 · groupe2024</div>
+        </div>
+    </div>
 
     <!-- ===== TOAST ===== -->
     <div class="toast" id="toast"></div>
 
     <!-- ===== HEADER ===== -->
-    <header class="header">
+    <header class="header" id="mainHeader" style="display:none;">
         <div class="logo">🛡️ FOKON'<span>ALERT</span></div>
         <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-            <div class="status">
+            <span class="status">
                 <span class="dot" id="statusDot"></span>
                 <span id="connectionStatus">Connecté</span>
-            </div>
-            <div class="user-badge">
-                👤 <select id="groupSelector">
-                    <option value="A">Groupe A</option>
-                    <option value="B">Groupe B</option>
-                    <option value="C">Groupe C</option>
-                </select>
-            </div>
+            </span>
+            <span class="user-badge" id="profileBadge">👤 Civil</span>
+            <button class="btn-logout" onclick="doLogout()">🚪 Quitter</button>
         </div>
     </header>
 
+    <!-- ===== BANNIÈRE VISIBILITÉ ===== -->
+    <div class="visibility-banner" id="visibilityBanner" style="display:none;">
+        <span id="visibilityText"></span>
+    </div>
+
     <!-- ===== LOCALISATION ===== -->
-    <div class="loc-bar">
+    <div class="loc-bar" id="locBar" style="display:none;">
         <div>📍 <span class="city" id="currentCity">Majunga · Mahabibo</span></div>
         <div class="stats">
             <span>👥 <span class="num" id="groupCount">3</span> groupes</span>
@@ -601,65 +1060,56 @@
         </div>
     </div>
 
-    <!-- ===== CARTE ===== -->
-    <div class="map-wrapper" style="position:relative;">
+    <!-- ===== CARTE 3D ===== -->
+    <div class="map-wrapper" id="mapWrapper" style="display:none;">
         <div id="map"></div>
-        <!-- Légende -->
-        <div class="map-legend">
-            <div class="legend-item">📍 <b style="color:#e74c3c;">Vous (Groupe A)</b></div>
-            <div class="legend-item">🟢 <b style="color:#2ecc71;">Groupe B</b></div>
-            <div class="legend-item">🔵 <b style="color:#3498db;">Groupe C</b></div>
-            <div class="legend-item">🚔 <b style="color:#f5c842;">Police</b></div>
-            <div class="legend-item">⭐ <b style="color:#8e44ad;">Gendarmerie</b></div>
-            <div class="legend-item">🚨 <b style="color:#e74c3c;">Alerte kidnapping</b></div>
+
+        <div class="map-controls">
+            <button id="btnLocate" onclick="toggleMyPosition()">📍</button>
+        </div>
+
+        <button class="theme-toggle" id="themeToggle">
+            <span id="themeIcon">☀️</span>
+            <div class="toggle-track">
+                <div class="toggle-thumb"></div>
+            </div>
+        </button>
+
+        <div class="city-zoom" id="cityButtons">
+            <button data-lat="-18.8792" data-lng="47.5079">Tana</button>
+            <button data-lat="-15.7167" data-lng="46.3167">Majunga</button>
+            <button data-lat="-12.2833" data-lng="49.2833">Diego</button>
+            <button data-lat="-18.1523" data-lng="49.4023">Tamatave</button>
+            <button data-lat="-13.3125" data-lng="48.2625">Nosy Be</button>
+            <button data-lat="-21.4333" data-lng="47.0833">Fianar</button>
+            <button data-lat="-23.35" data-lng="43.6667">Toliara</button>
+        </div>
+
+        <div class="map-legend" id="mapLegend">
+            <div class="legend-item"><span class="legend-dot" style="background:#f5c842;"></span> Police</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#8e44ad;"></span> Gendarmerie</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#e74c3c;"></span> Groupe A</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#2ecc71;"></span> Groupe B</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#3498db;"></span> Groupe C</div>
         </div>
     </div>
 
     <!-- ===== GROUPES ===== -->
-    <div class="section-title">👥 Groupes de vigilance</div>
-    <div class="group-list" id="groupList">
-        <!-- Groupe A -->
-        <div class="group-card" style="border-left-color:#e74c3c;" id="groupACard">
-            <div class="g-name">🔴 Groupe A <span style="font-size:0.5rem; background:#e74c3c30; padding:0 8px; border-radius:20px;" id="groupABadge">vous</span></div>
-            <div class="g-status" id="groupAStatus">En patrouille · Nord</div>
-            <div class="g-members" id="groupAMembers">6 membres</div>
-            <div class="g-actions">
-                <button class="primary" onclick="sendPosition('A')">📍 Position</button>
-                <button onclick="callGroup('A')">📡 Appel</button>
-            </div>
-        </div>
-        <!-- Groupe B -->
-        <div class="group-card" style="border-left-color:#2ecc71;" id="groupBCard">
-            <div class="g-name">🟢 Groupe B</div>
-            <div class="g-status" id="groupBStatus">Rondes actives · Sud</div>
-            <div class="g-members" id="groupBMembers">5 membres</div>
-            <div class="g-actions">
-                <button onclick="sendPosition('B')">📍 Voir</button>
-                <button onclick="callGroup('B')">📡 Appel</button>
-            </div>
-        </div>
-        <!-- Groupe C -->
-        <div class="group-card" style="border-left-color:#3498db;" id="groupCCard">
-            <div class="g-name">🔵 Groupe C</div>
-            <div class="g-status" id="groupCStatus">En intervention · Est</div>
-            <div class="g-members" id="groupCMembers">4 membres</div>
-            <div class="g-actions">
-                <button onclick="sendPosition('C')">📍 Voir</button>
-                <button onclick="callGroup('C')">📡 Appel</button>
-            </div>
-        </div>
+    <div id="groupsSection" style="display:none;">
+        <div class="section-title">👥 Groupes de vigilance</div>
+        <div class="group-list" id="groupList"></div>
     </div>
 
     <!-- ===== ALERTE ===== -->
-    <div class="alert-zone">
+    <div class="alert-zone" id="alertSection" style="display:none;">
         <button class="btn-alert" id="btnAlert">
-            🚨 ALERTE KIDNAPPING
-            <span class="sub">⚠️ Tous les groupes & forces de l'ordre</span>
+            🚨 SIGNALER UNE URGENCE
+            <span class="sub">⚠️ Alerte immédiate · Tous les intervenants</span>
         </button>
     </div>
 
     <!-- ===== TALKIE-WALKIE ===== -->
-    <div class="tw-section">
+    <div class="tw-section" id="twSection" style="display:none;">
         <div class="tw-header">
             <span class="tw-title">
                 🎙️ Talkie-Walkie
@@ -671,7 +1121,7 @@
             <span class="tw-channel" id="twChannel">🔓 Canal général</span>
         </div>
         <div class="tw-messages" id="twMessages">
-            <div class="tw-msg"><span class="who system">🔄 Système</span> <span class="time">--:--</span> — Canal prêt · 3 groupes connectés</div>
+            <div class="tw-msg"><span class="who system">🔄 Système</span> <span class="time">--:--</span> — En attente de connexion</div>
         </div>
         <div class="tw-controls">
             <button id="twListen" class="record listening">🎧 Écouter</button>
@@ -679,515 +1129,875 @@
             <button id="twStop" class="secondary" disabled>⏹️ Arrêter</button>
             <button id="twClear" class="secondary">🗑️ Effacer</button>
         </div>
-        <div class="tw-status" id="twStatus">
-            ⚡ Appuyez sur "Parler" pour une transmission vocale en direct
-        </div>
+        <div class="tw-status" id="twStatus">⚡ Appuyez sur "Parler" pour une transmission vocale</div>
     </div>
 
     <!-- ============================================================ -->
-    <!-- ===== JAVASCRIPT COMPLET ===== -->
+    <!-- ===== JAVASCRIPT ===== -->
     <!-- ============================================================ -->
     <script>
         (function() {
             'use strict';
 
             // =========================================================
-            // 1. DÉTECTION CONNEXION
+            // 1. CONFIGURATION MAPBOX
             // =========================================================
-            let isOnline = navigator.onLine;
-            const offlineBar = document.getElementById('offlineBar');
-            
-            function updateOnlineStatus() {
-                isOnline = navigator.onLine;
-                if (!isOnline) {
-                    offlineBar.classList.add('show');
-                    document.getElementById('statusDot').style.background = '#e74c3c';
-                } else {
-                    offlineBar.classList.remove('show');
-                    document.getElementById('statusDot').style.background = '#5dffa0';
-                }
-            }
-            window.addEventListener('online', updateOnlineStatus);
-            window.addEventListener('offline', updateOnlineStatus);
-            updateOnlineStatus();
+            mapboxgl.accessToken = 'pk.eyJ1IjoiZm9rb3RhbnltZyIsImEiOiJjbXJtZ3pjcHgyejJpMnpyenJnMWdhNnExIn0.lWCyUBdycNP1pQtNvRsaEA';
 
             // =========================================================
-            // 2. FIREBASE
+            // 2. MATRICE DE VISIBILITÉ
             // =========================================================
-            const firebaseConfig = {
-                apiKey: "AIzaSyDemoKey123456789",
-                authDomain: "ton-projet.firebaseapp.com",
-                databaseURL: "https://ton-projet-default-rtdb.firebaseio.com",
-                projectId: "ton-projet",
-                storageBucket: "ton-projet.appspot.com",
-                messagingSenderId: "123456789",
-                appId: "1:123456789:web:abcdef123456"
+            const MATRICE = {
+                police: {
+                    voitPolice: true,
+                    voitGendarmerie: true,
+                    voitGroupeA: true,
+                    voitGroupeB: true,
+                    voitGroupeC: true,
+                    voitCivils: true,
+                    voitFamille: true,
+                    emoji: '🚔',
+                    nom: 'Police',
+                    couleur: '#f5c842',
+                    label: '✅ Vous voyez : Police, Gendarmerie, Groupes A/B/C, Civils, Famille'
+                },
+                gendarmerie: {
+                    voitPolice: true,
+                    voitGendarmerie: true,
+                    voitGroupeA: true,
+                    voitGroupeB: true,
+                    voitGroupeC: true,
+                    voitCivils: true,
+                    voitFamille: true,
+                    emoji: '⭐',
+                    nom: 'Gendarmerie',
+                    couleur: '#8e44ad',
+                    label: '✅ Vous voyez : Police, Gendarmerie, Groupes A/B/C, Civils, Famille'
+                },
+                groupeA: {
+                    voitPolice: false,
+                    voitGendarmerie: false,
+                    voitGroupeA: true,
+                    voitGroupeB: true,
+                    voitGroupeC: true,
+                    voitCivils: true,
+                    voitFamille: false,
+                    emoji: '🔴',
+                    nom: 'Groupe A',
+                    couleur: '#e74c3c',
+                    label: '✅ Vous voyez : Groupes A, B, C, Civils'
+                },
+                groupeB: {
+                    voitPolice: false,
+                    voitGendarmerie: false,
+                    voitGroupeA: true,
+                    voitGroupeB: true,
+                    voitGroupeC: true,
+                    voitCivils: true,
+                    voitFamille: false,
+                    emoji: '🟢',
+                    nom: 'Groupe B',
+                    couleur: '#2ecc71',
+                    label: '✅ Vous voyez : Groupes A, B, C, Civils'
+                },
+                groupeC: {
+                    voitPolice: false,
+                    voitGendarmerie: false,
+                    voitGroupeA: true,
+                    voitGroupeB: true,
+                    voitGroupeC: true,
+                    voitCivils: true,
+                    voitFamille: false,
+                    emoji: '🔵',
+                    nom: 'Groupe C',
+                    couleur: '#3498db',
+                    label: '✅ Vous voyez : Groupes A, B, C, Civils'
+                },
+                civil: {
+                    voitPolice: false,
+                    voitGendarmerie: false,
+                    voitGroupeA: false,
+                    voitGroupeB: false,
+                    voitGroupeC: false,
+                    voitCivils: false,
+                    voitFamille: true,
+                    emoji: '🔵',
+                    nom: 'Civil',
+                    couleur: '#3498db',
+                    label: '🔵 Vous voyez UNIQUEMENT votre famille (avec code)'
+                }
             };
 
-            let useFirebase = false;
-            let db = null;
-            let currentGroup = 'A';
-            let userLat = null;
-            let userLng = null;
+            function peutVoir(roleCible) {
+                if (!roleCible || roleCible === 'system' || roleCible === 'alert') return true;
+                if (!userProfile) return false;
+                const droits = MATRICE[userProfile.type];
+                if (!droits) return false;
+                const mapping = {
+                    'police': 'voitPolice',
+                    'gendarmerie': 'voitGendarmerie',
+                    'groupeA': 'voitGroupeA',
+                    'groupeB': 'voitGroupeB',
+                    'groupeC': 'voitGroupeC',
+                    'civil': 'voitCivils',
+                    'famille': 'voitFamille'
+                };
+                return droits[mapping[roleCible]] || false;
+            }
 
-            try {
-                firebase.initializeApp(firebaseConfig);
-                db = firebase.database();
-                useFirebase = true;
-                console.log('🔥 Firebase connecté !');
-                document.getElementById('connectionStatus').textContent = '🔥 Connecté (cloud)';
-            } catch (e) {
-                console.warn('⚠️ Firebase non configuré, mode local');
-                document.getElementById('connectionStatus').textContent = '📡 Mode local';
+            function peutParler(roleCible) {
+                if (!roleCible) return false;
+                if (roleCible === userProfile?.type) return true;
+                return peutVoir(roleCible);
             }
 
             // =========================================================
-            // 3. CARTE LEAFLET
+            // 3. VARIABLES GLOBALES
             // =========================================================
-            const map = L.map('map', {
-                center: [-15.7167, 46.3167],
-                zoom: 15,
-                zoomControl: false,
-            });
-
-            L.control.zoom({ position: 'topright', zoomInText: '+', zoomOutText: '−' }).addTo(map);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap'
-            }).addTo(map);
-
-            // Zone de vigilance
-            L.circle([-15.7167, 46.3167], {
-                radius: 1200,
-                color: '#f5c842',
-                fillColor: '#f5c84220',
-                fillOpacity: 0.1,
-                weight: 1.5,
-                dashArray: '6, 8',
-            }).addTo(map).bindPopup('Zone de vigilance · Mahabibo');
-
-            // =========================================================
-            // 4. MARQUEURS AVEC BELLES ICÔNES
-            // =========================================================
-            const markers = {};
-            const groupMarkers = {};
+            let userProfile = null;
+            let userLat = null,
+                userLng = null;
+            let map = null;
+            let positionShared = false;
             let userMarker = null;
-            let alertMarkers = [];
+            let isNight = false;
+            let alertActive = false;
+            let familyCode = '';
+            let isOnline = navigator.onLine;
+            let groupMarkers = {};
+            let groupPositions = {};
+            let peer = null,
+                peerId = '';
+            let currentCall = null,
+                localStream = null,
+                isCallActive = false;
+            let listenInterval = null;
+            let audioCtx = null,
+                noiseGain = null,
+                noiseSource = null;
 
-            // Positions initiales des groupes
-            const groupPositions = {
-                B: { lat: -15.7280, lng: 46.3220, name: 'Groupe B', color: '#2ecc71', emoji: '🟢' },
-                C: { lat: -15.7100, lng: 46.3300, name: 'Groupe C', color: '#3498db', emoji: '🔵' },
-                police: { lat: -15.7200, lng: 46.3100, name: 'Police', color: '#f5c842', emoji: '🚔' },
-                gendarmerie: { lat: -15.7250, lng: 46.3250, name: 'Gendarmerie', color: '#8e44ad', emoji: '⭐' }
-            };
+            // =========================================================
+            // 4. AUDIO TALKIE
+            // =========================================================
+            function initAudio() {
+                try {
+                    audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                    noiseGain = audioCtx.createGain();
+                    noiseGain.gain.value = 0;
+                    noiseGain.connect(audioCtx.destination);
+                } catch (e) {}
+            }
 
-            // Créer les marqueurs avec de belles icônes
-            function createGroupMarkers() {
-                for (const [key, pos] of Object.entries(groupPositions)) {
-                    const icon = L.divIcon({
-                        className: 'custom-marker',
-                        html: `
-                            <div style="
-                                background:${pos.color};
-                                width:34px;height:34px;
-                                border-radius:50% 50% 50% 0;
-                                transform:rotate(-45deg);
-                                display:flex;align-items:center;justify-content:center;
-                                border:2px solid #fff;
-                                box-shadow:0 4px 15px rgba(0,0,0,0.5);
-                                font-size:18px;
-                            "><span style="transform:rotate(45deg);">${pos.emoji}</span></div>
-                            <div style="
-                                background:rgba(0,0,0,0.8);
-                                color:#fff;
-                                font-size:9px;
-                                font-weight:700;
-                                padding:2px 6px;
-                                border-radius:3px;
-                                margin-top:2px;
-                                text-align:center;
-                                white-space:nowrap;
-                            ">${pos.name}</div>
-                        `,
-                        iconSize: [38, 50],
-                        iconAnchor: [19, 50],
-                        popupAnchor: [0, -50]
-                    });
+            function createWhiteNoise() {
+                if (!audioCtx) return;
+                try {
+                    const bufferSize = 2 * audioCtx.sampleRate;
+                    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const output = noiseBuffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+                    noiseSource = audioCtx.createBufferSource();
+                    noiseSource.buffer = noiseBuffer;
+                    noiseSource.loop = true;
+                    noiseSource.connect(noiseGain);
+                    noiseSource.start();
+                } catch (e) {}
+            }
 
-                    groupMarkers[key] = L.marker([pos.lat, pos.lng], { icon })
-                        .addTo(map)
-                        .bindPopup(`<b>${pos.name}</b><br>📍 ${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)}<br>✅ En service`);
+            function playSquelch(duration = 0.12) {
+                if (!audioCtx) return;
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + duration);
+                    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                } catch (e) {}
+            }
+
+            function playBeepStart() {
+                if (!audioCtx) return;
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.04);
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.1);
+                } catch (e) {}
+            }
+
+            function playBeepEnd() {
+                if (!audioCtx) return;
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.04);
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.12);
+                } catch (e) {}
+            }
+
+            function playRadioStatic(intensity = 0.15) {
+                if (!audioCtx || !noiseGain) return;
+                try { noiseGain.gain.setValueAtTime(intensity, audioCtx.currentTime); } catch (e) {}
+            }
+
+            function stopRadioStatic() {
+                if (!noiseGain) return;
+                try { noiseGain.gain.setValueAtTime(0, audioCtx.currentTime); } catch (e) {}
+            }
+
+            function playPTTClick() {
+                if (!audioCtx) return;
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.02);
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.03);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.03);
+                } catch (e) {}
+            }
+
+            function simulerTransmission(duree = 1200) {
+                playPTTClick();
+                playBeepStart();
+                playSquelch(0.06);
+                setTimeout(() => playRadioStatic(0.1), 60);
+                setTimeout(() => { playBeepEnd();
+                    playSquelch(0.06);
+                    stopRadioStatic();
+                    playPTTClick(); }, duree);
+            }
+
+            function playAlertSound() {
+                if (!audioCtx) return;
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => {
+                        try {
+                            const osc = audioCtx.createOscillator();
+                            const gain = audioCtx.createGain();
+                            osc.type = 'square';
+                            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                            gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                            osc.connect(gain);
+                            gain.connect(audioCtx.destination);
+                            osc.start();
+                            osc.stop(audioCtx.currentTime + 0.2);
+                        } catch (e) {}
+                    }, i * 300);
                 }
             }
 
-            createGroupMarkers();
-
             // =========================================================
-            // 5. SIMULATION DÉPLACEMENT TEMPS RÉEL
-            // =========================================================
-            function simulateGroupMovement() {
-                // Groupe B se déplace
-                if (groupMarkers['B']) {
-                    groupPositions.B.lat += (Math.random() - 0.5) * 0.002;
-                    groupPositions.B.lng += (Math.random() - 0.5) * 0.002;
-                    groupMarkers['B'].setLatLng([groupPositions.B.lat, groupPositions.B.lng]);
-                    // Mettre à jour le popup
-                    groupMarkers['B'].setPopupContent(`<b>Groupe B</b><br>📍 ${groupPositions.B.lat.toFixed(4)}, ${groupPositions.B.lng.toFixed(4)}<br>✅ En patrouille`);
-                }
-                // Groupe C se déplace
-                if (groupMarkers['C']) {
-                    groupPositions.C.lat += (Math.random() - 0.5) * 0.0015;
-                    groupPositions.C.lng += (Math.random() - 0.5) * 0.0015;
-                    groupMarkers['C'].setLatLng([groupPositions.C.lat, groupPositions.C.lng]);
-                }
-                // Police se déplace
-                if (groupMarkers['police']) {
-                    groupPositions.police.lat += (Math.random() - 0.5) * 0.001;
-                    groupPositions.police.lng += (Math.random() - 0.5) * 0.001;
-                    groupMarkers['police'].setLatLng([groupPositions.police.lat, groupPositions.police.lng]);
-                }
-            }
-
-            setInterval(simulateGroupMovement, 2000);
-
-            // =========================================================
-            // 6. GÉOLOCALISATION
-            // =========================================================
-            function updateUserPosition(lat, lng) {
-                userLat = lat;
-                userLng = lng;
-
-                if (userMarker) {
-                    map.removeLayer(userMarker);
-                }
-
-                // Icône utilisateur bien visible
-                const userIcon = L.divIcon({
-                    className: 'user-marker',
-                    html: `
-                        <div style="
-                            background:#e74c3c;
-                            width:40px;height:40px;
-                            border-radius:50% 50% 50% 0;
-                            transform:rotate(-45deg);
-                            display:flex;align-items:center;justify-content:center;
-                            border:3px solid #fff;
-                            box-shadow:0 4px 20px rgba(231,76,60,0.8);
-                            font-size:20px;
-                            animation: pulse 1.5s infinite;
-                        "><span style="transform:rotate(45deg);">📍</span></div>
-                        <div style="
-                            background:rgba(0,0,0,0.85);
-                            color:#fff;
-                            font-size:10px;
-                            font-weight:700;
-                            padding:3px 8px;
-                            border-radius:4px;
-                            margin-top:2px;
-                            text-align:center;
-                            white-space:nowrap;
-                            border:1px solid #e74c3c;
-                        ">VOUS · Groupe ${currentGroup}</div>
-                    `,
-                    iconSize: [44, 58],
-                    iconAnchor: [22, 58],
-                    popupAnchor: [0, -58]
-                });
-
-                userMarker = L.marker([lat, lng], { icon: userIcon })
-                    .addTo(map)
-                    .bindPopup(`<b style="color:#e74c3c;">📍 Votre position</b><br>Groupe ${currentGroup}<br>${lat.toFixed(5)}, ${lng.toFixed(5)}`)
-                    .openPopup();
-
-                map.setView([lat, lng], 16);
-                document.getElementById('currentCity').textContent = `Majunga · ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-
-                // Envoyer la position à Firebase
-                if (useFirebase && db) {
-                    db.ref('positions/' + getUserId()).set({
-                        lat: lat,
-                        lng: lng,
-                        group: currentGroup,
-                        timestamp: Date.now()
-                    });
-                }
-            }
-
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    function(pos) {
-                        updateUserPosition(pos.coords.latitude, pos.coords.longitude);
-                        showToast('📍 Position GPS détectée', 'success');
-                    },
-                    function() {
-                        showToast('⚠️ Activez la géolocalisation', 'error');
-                        // Position par défaut
-                        updateUserPosition(-15.7167, 46.3167);
-                    },
-                    { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
-                );
-
-                // Suivre les mouvements
-                navigator.geolocation.watchPosition(
-                    function(pos) {
-                        updateUserPosition(pos.coords.latitude, pos.coords.longitude);
-                    },
-                    function() {},
-                    { enableHighAccuracy: true, maximumAge: 10000 }
-                );
-            }
-
-            // =========================================================
-            // 7. IDENTIFIANT UNIQUE
-            // =========================================================
-            function getUserId() {
-                let id = localStorage.getItem('fokon_user_id');
-                if (!id) {
-                    id = 'user_' + Math.random().toString(36).substr(2, 9);
-                    localStorage.setItem('fokon_user_id', id);
-                }
-                return id;
-            }
-
-            // =========================================================
-            // 8. TOAST
+            // 5. TOAST
             // =========================================================
             function showToast(msg, type) {
                 const t = document.getElementById('toast');
                 t.textContent = msg;
                 t.className = 'toast show ' + (type || 'info');
                 clearTimeout(t._hide);
-                t._hide = setTimeout(() => { t.className = 'toast'; }, 4000);
+                t._hide = setTimeout(() => { t.className = 'toast'; }, 2500);
             }
             window.showToast = showToast;
 
             // =========================================================
-            // 9. MESSAGES TALKIE
+            // 6. IDENTIFIANT
             // =========================================================
-            const twMessages = document.getElementById('twMessages');
-            let listenInterval = null;
-
-            function addTwMessage(who, text, cls) {
-                const div = document.createElement('div');
-                div.className = 'tw-msg';
-                const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                div.innerHTML = `<span class="who ${cls || ''}">${who}</span> <span class="time">${time}</span> — ${text}`;
-                twMessages.appendChild(div);
-                twMessages.scrollTop = twMessages.scrollHeight;
-                while (twMessages.children.length > 50) {
-                    twMessages.removeChild(twMessages.firstChild);
-                }
-
-                if (useFirebase && db) {
-                    db.ref('messages').push({
-                        who: who,
-                        text: text,
-                        cls: cls || '',
-                        timestamp: Date.now(),
-                        userId: getUserId(),
-                        group: currentGroup
-                    });
-                }
-            }
-            window.addTwMessage = addTwMessage;
-
-            // Écouter Firebase
-            if (useFirebase && db) {
-                db.ref('messages').limitToLast(10).on('child_added', function(snapshot) {
-                    const data = snapshot.val();
-                    if (data.userId !== getUserId()) {
-                        addTwMessage(data.who, data.text, data.cls);
-                    }
-                });
-
-                db.ref('alerts').on('child_added', function(snapshot) {
-                    const data = snapshot.val();
-                    if (data.userId !== getUserId() && data.lat && data.lng) {
-                        addAlertMarkerOnMap(data.lat, data.lng, data.group || '?');
-                    }
-                });
-            }
-
-            function simulateOtherMessage() {
-                const msgs = [
-                    { who: 'Groupe B', cls: 'g2', text: 'Rondes OK · secteur sud' },
-                    { who: 'Groupe C', cls: 'g3', text: 'Présence normale · marché' },
-                    { who: 'Groupe B', cls: 'g2', text: 'On se déplace vers le nord' },
-                    { who: 'Groupe C', cls: 'g3', text: '⚠️ Véhicule suspect · on surveille' },
-                ];
-                const r = msgs[Math.floor(Math.random() * msgs.length)];
-                addTwMessage(r.who, r.text, r.cls);
-            }
-
-            // =========================================================
-            // 10. ALERTE SUR LA CARTE
-            // =========================================================
-            function addAlertMarkerOnMap(lat, lng, group) {
-                const alertIcon = L.divIcon({
-                    className: 'alert-marker',
-                    html: '🚨<span class="label">ALERTE</span>',
-                    iconSize: [40, 40],
-                    iconAnchor: [20, 40]
-                });
-
-                const marker = L.marker([lat, lng], { icon: alertIcon }).addTo(map);
-                marker.bindPopup(`
-                    <b>🚨 ALERTE KIDNAPPING</b><br>
-                    📍 Position: ${lat.toFixed(5)}, ${lng.toFixed(5)}<br>
-                    👥 Groupe: ${group || '?'}<br>
-                    🕐 Signalée à: ${new Date().toLocaleTimeString()}<br>
-                    <span style="color:#e74c3c;font-weight:700;">⚠️ INTERVENTION EN COURS</span>
-                `).openPopup();
-
-                const circle = L.circle([lat, lng], {
-                    radius: 50,
-                    color: '#e74c3c',
-                    fillColor: '#e74c3c',
-                    fillOpacity: 0.3,
-                    weight: 2,
-                    className: 'alert-circle'
-                }).addTo(map);
-
-                let radius = 50;
-                const growInterval = setInterval(() => {
-                    radius += 15;
-                    circle.setRadius(radius);
-                    circle.setStyle({
-                        fillOpacity: Math.max(0, 0.3 - (radius / 500)),
-                        weight: Math.max(0.5, 2 - (radius / 200))
-                    });
-                    if (radius > 500) {
-                        clearInterval(growInterval);
-                        map.removeLayer(circle);
-                    }
-                }, 100);
-
-                map.setView([lat, lng], 15);
-                alertMarkers.push({ marker, circle, interval: growInterval });
-                addTwMessage('🚨 ALERTE', `📍 Alerte signalée à ${lat.toFixed(4)}, ${lng.toFixed(4)} (Groupe ${group || '?'})`, 'alert');
-                showToast(`🚨 ALERTE positionnée sur la carte !`, 'error');
-            }
-
-            // =========================================================
-            // 11. BOUTON ALERTE KIDNAPPING
-            // =========================================================
-            const btnAlert = document.getElementById('btnAlert');
-            let alertActive = false;
-
-            btnAlert.addEventListener('click', function() {
-                if (alertActive) {
-                    showToast('⚠️ Alerte déjà en cours', 'error');
-                    return;
-                }
-
-                if (!userLat || !userLng) {
-                    showToast('⚠️ Position GPS non disponible. Activez la géolocalisation.', 'error');
-                    return;
-                }
-
-                alertActive = true;
-                this.disabled = true;
-                this.innerHTML = '🚨 ALERTE EN COURS... <span class="sub">⏳ Intervention</span>';
-
-                addAlertMarkerOnMap(userLat, userLng, currentGroup);
-                addTwMessage('🚨 ALERTE', `🔴 KIDNAPPING · Secteur Mahabibo (Groupe ${currentGroup})`, 'alert');
-                showToast('🚨 ALERTE KIDNAPPING ! Position envoyée à tous', 'error');
-
-                if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 500]);
-
-                setTimeout(() => addTwMessage('Groupe B', '✅ Reçu ! Intervention en cours', 'g2'), 1500);
-                setTimeout(() => addTwMessage('Groupe C', '✅ On se rapproche !', 'g3'), 2500);
-                setTimeout(() => addTwMessage('🔄 Système', '📡 Gendarmes & Police notifiés (17 · 112)', 'system'), 3500);
-
-                if (useFirebase && db) {
-                    db.ref('alerts').push({
-                        type: 'kidnapping',
-                        lat: userLat,
-                        lng: userLng,
-                        location: 'Mahabibo',
-                        group: currentGroup,
-                        userId: getUserId(),
-                        timestamp: Date.now(),
-                        active: true
-                    });
-                }
-
-                setTimeout(() => {
-                    alertActive = false;
-                    btnAlert.disabled = false;
-                    btnAlert.innerHTML = '🚨 ALERTE KIDNAPPING <span class="sub">⚠️ Tous les groupes & forces de l\'ordre</span>';
-                    showToast('✅ Alerte terminée', 'success');
-                    addTwMessage('🔄 Système', '✅ Fin d\'alerte · Restez vigilants', 'system');
-                }, 20000);
-            });
-
-            // =========================================================
-            // 12. AUDIO PEERJS
-            // =========================================================
-            let peer = null;
-            let currentCall = null;
-            let localStream = null;
-            let isCallActive = false;
-            let peerId = '';
-
-            function getPeerId() {
-                let id = localStorage.getItem('fokon_peer_id');
-                if (!id) {
-                    id = 'tw_' + Math.random().toString(36).substr(2, 8);
-                    localStorage.setItem('fokon_peer_id', id);
-                }
+            function getUserId() {
+                let id = localStorage.getItem('fokon_user_id');
+                if (!id) { id = 'user_' + Math.random().toString(36).substr(2, 8);
+                    localStorage.setItem('fokon_user_id', id); }
                 return id;
             }
 
+            function getPeerId() {
+                let id = localStorage.getItem('fokon_peer_id');
+                if (!id) { id = 'tw_' + Math.random().toString(36).substr(2, 8);
+                    localStorage.setItem('fokon_peer_id', id); }
+                return id;
+            }
+
+            // =========================================================
+            // 7. CONNEXION
+            // =========================================================
+            window.updateLoginInfo = function() {
+                const type = document.getElementById('loginType').value;
+                document.getElementById('familySection').style.display = (type === 'civil') ? 'block' : 'none';
+                const info = MATRICE[type];
+                if (info) {
+                    document.getElementById('loginWarning').innerHTML = '🔒 <strong>' + info.nom + ' :</strong> ' + info.label;
+                }
+            };
+
+            window.doLogin = function() {
+                const type = document.getElementById('loginType').value;
+                const name = document.getElementById('loginName').value.trim();
+                const commune = document.getElementById('loginCommune').value;
+                const code = document.getElementById('loginCode').value.trim();
+                familyCode = document.getElementById('familyCode').value.trim();
+
+                if (!name) { showToast('⚠️ Veuillez entrer votre nom', 'error'); return; }
+
+                const validCodes = {
+                    police: ['police2024', 'fokon2024'],
+                    gendarmerie: ['gendarmerie2024', 'fokon2024'],
+                    groupeA: ['groupe2024'],
+                    groupeB: ['groupe2024'],
+                    groupeC: ['groupe2024'],
+                    civil: ['']
+                };
+                if (type !== 'civil' && !validCodes[type].includes(code.toLowerCase())) {
+                    showToast('❌ Code d\'accès invalide', 'error');
+                    return;
+                }
+
+                userProfile = { type, name, commune, code };
+
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainHeader').style.display = 'flex';
+                document.getElementById('visibilityBanner').style.display = 'block';
+                document.getElementById('locBar').style.display = 'flex';
+                document.getElementById('mapWrapper').style.display = 'block';
+                document.getElementById('groupsSection').style.display = 'block';
+                document.getElementById('alertSection').style.display = 'block';
+                document.getElementById('twSection').style.display = 'block';
+
+                setupUI();
+                initMap();
+                initPeerJS();
+                getUserLocation();
+                initAudio();
+                createWhiteNoise();
+
+                showToast('✅ Connecté · ' + MATRICE[type].nom, 'success');
+                addTwMessage('🔄 Système', '✅ ' + name + ' connecté · ' + MATRICE[type].emoji + ' ' + MATRICE[type].nom,
+                    'system');
+                playSquelch(0.12);
+            };
+
+            window.doLogout = function() {
+                if (userMarker) { userMarker.remove();
+                    userMarker = null; }
+                if (currentCall) { currentCall.close(); }
+                if (localStream) { localStream.getTracks().forEach(t => t.stop()); }
+                userProfile = null;
+                positionShared = false;
+                stopRadioStatic();
+                ['mainHeader', 'visibilityBanner', 'locBar', 'mapWrapper', 'groupsSection', 'alertSection', 'twSection']
+                .forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'none';
+                });
+                document.getElementById('loginScreen').classList.remove('hidden');
+                showToast('👋 Déconnecté', 'info');
+            };
+
+            // =========================================================
+            // 8. INTERFACE
+            // =========================================================
+            function setupUI() {
+                const info = MATRICE[userProfile.type];
+                document.getElementById('profileBadge').textContent = info.emoji + ' ' + info.nom;
+                document.getElementById('visibilityText').textContent = info.label;
+                document.getElementById('visibilityBanner').className = 'visibility-banner ' +
+                    (userProfile.type === 'civil' ? 'civil' :
+                    userProfile.type === 'groupeA' || userProfile.type === 'groupeB' || userProfile.type === 'groupeC' ?
+                    'volontaire' : 'force');
+                document.getElementById('currentCity').textContent = userProfile.commune;
+                buildGroupCards();
+                updateStats();
+            }
+
+            function updateStats() {
+                const type = userProfile.type;
+                let g = 0,
+                    m = 0;
+                if (type === 'police' || type === 'gendarmerie') { g = 5;
+                    m = 20; } else if (type === 'groupeA' || type === 'groupeB' || type === 'groupeC') { g = 3;
+                    m = 12; } else { g = 0;
+                    m = 2; }
+                document.getElementById('groupCount').textContent = g;
+                document.getElementById('memberCount').textContent = m;
+            }
+
+            // =========================================================
+            // 9. GROUPES
+            // =========================================================
+            function buildGroupCards() {
+                const container = document.getElementById('groupList');
+                container.innerHTML = '';
+
+                const groups = [
+                    { id: 'police', name: '🚔 Police', label: 'Poste Mahabibo', visible: peutVoir('police') },
+                    { id: 'gendarmerie', name: '⭐ Gendarmerie', label: 'Brigade Majunga', visible: peutVoir(
+                        'gendarmerie') },
+                    { id: 'groupeA', name: '🔴 Groupe A', label: 'Patrouille nord', visible: peutVoir('groupeA'),
+                        cls: 'gA' },
+                    { id: 'groupeB', name: '🟢 Groupe B', label: 'Rondes sud', visible: peutVoir('groupeB'),
+                        cls: 'gB' },
+                    { id: 'groupeC', name: '🔵 Groupe C', label: 'Intervention est', visible: peutVoir('groupeC'),
+                        cls: 'gC' },
+                ];
+
+                if (peutVoir('civil') || (userProfile.type === 'civil' && familyCode)) {
+                    groups.push({ id: 'civil', name: '🔵 Civils', label: 'Protection civile', visible: true });
+                }
+
+                groups.forEach(g => {
+                    const card = document.createElement('div');
+                    card.className = 'group-card' + (g.visible ? '' : ' locked');
+                    card.style.borderLeftColor = g.visible ? '#f5c842' : '#555';
+                    card.innerHTML = `
+                        <div class="g-name">${g.name}</div>
+                        <div class="g-status">${g.visible ? g.label : '🔒 Position confidentielle'}</div>
+                        ${g.visible ? `
+                        <div class="g-actions">
+                            <button class="primary" onclick="showOnMap('${g.id}')">📍 Voir</button>
+                            <button onclick="callTeam('${g.id}')">📡 Appel</button>
+                        </div>` : `
+                        <div style="font-size:0.45rem;color:#e74c3c;margin-top:2px;">🔒 Invisible pour votre sécurité</div>`}
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            // =========================================================
+            // 10. CARTE 3D MAPBOX
+            // =========================================================
+            const communes = {
+                majunga: [-15.7167, 46.3167],
+                tana: [-18.8792, 47.5079],
+                tamatave: [-18.1500, 49.4000],
+                fianar: [-21.4500, 47.0800],
+                diego: [-12.2800, 49.2900],
+                toliara: [-23.3500, 43.6667]
+            };
+
+            function initMap() {
+                const center = communes[userProfile.commune] || [-15.7167, 46.3167];
+
+                map = new mapboxgl.Map({
+                    container: 'map',
+                    style: 'mapbox://styles/mapbox/standard',
+                    center: center,
+                    zoom: 14.5,
+                    pitch: 50,
+                    bearing: 0,
+                    antialias: true,
+                });
+
+                map.on('load', function() {
+                    // Bâtiments 3D
+                    try {
+                        map.setPaintProperty('building', 'fill-extrusion-color', [
+                            'interpolate', ['linear'], ['get', 'height'],
+                            0, '#4a4a5a',
+                            10, '#6b6b8a',
+                            30, '#8a8aaa',
+                            60, '#b0b0cc'
+                        ]);
+                        map.setPaintProperty('building', 'fill-extrusion-opacity', 0.85);
+                    } catch (e) {}
+
+                    // Arbres animés
+                    map.addSource('trees', {
+                        type: 'geojson',
+                        data: generateTrees()
+                    });
+                    map.addLayer({
+                        id: 'trees-layer',
+                        type: 'circle',
+                        source: 'trees',
+                        paint: {
+                            'circle-radius': 4,
+                            'circle-color': '#6bcb77',
+                            'circle-opacity': 0.6,
+                            'circle-blur': 0.3,
+                        }
+                    });
+
+                    let angle = 0;
+                    setInterval(() => {
+                        angle += 0.04;
+                        try {
+                            const radius = 3 + Math.sin(angle) * 1.5;
+                            const opacity = 0.5 + Math.sin(angle * 0.7 + 1) * 0.25;
+                            map.setPaintProperty('trees-layer', 'circle-radius', radius);
+                            map.setPaintProperty('trees-layer', 'circle-opacity', opacity);
+                        } catch (e) {}
+                    }, 120);
+
+                    // Piétons animés
+                    map.addSource('pedestrians', {
+                        type: 'geojson',
+                        data: generatePedestrians()
+                    });
+                    map.addLayer({
+                        id: 'pedestrians-layer',
+                        type: 'circle',
+                        source: 'pedestrians',
+                        paint: {
+                            'circle-radius': 3,
+                            'circle-color': '#4facfe',
+                            'circle-opacity': 0.8,
+                            'circle-stroke-color': '#ffffff',
+                            'circle-stroke-width': 1,
+                        }
+                    });
+
+                    let pedData = generatePedestrians().features;
+                    setInterval(() => {
+                        pedData = pedData.map(p => {
+                            const lat = p.geometry.coordinates[1] + (Math.random() - 0.5) * 0.0005;
+                            const lng = p.geometry.coordinates[0] + (Math.random() - 0.5) * 0.0005;
+                            return {
+                                type: 'Feature',
+                                geometry: { type: 'Point', coordinates: [lng, lat] },
+                                properties: {}
+                            };
+                        });
+                        try {
+                            map.getSource('pedestrians').setData({
+                                type: 'FeatureCollection',
+                                features: pedData
+                            });
+                        } catch (e) {}
+                    }, 500);
+
+                    // Marqueurs des groupes
+                    initGroupPositions(center);
+                    addGroupMarkers();
+
+                    document.querySelectorAll('.city-zoom button').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const lat = parseFloat(this.dataset.lat);
+                            const lng = parseFloat(this.dataset.lng);
+                            map.flyTo({
+                                center: [lng, lat],
+                                zoom: 15.5,
+                                pitch: 55,
+                                duration: 1800
+                            });
+                            showToast('📍 ' + this.textContent, 'info');
+                            playSquelch(0.06);
+                        });
+                    });
+
+                    applyTheme();
+                });
+
+                map.addControl(new mapboxgl.NavigationControl({
+                    showCompass: true,
+                    showZoom: true,
+                    visualizePitch: true
+                }));
+
+                setTimeout(() => map.resize(), 300);
+            }
+
+            // =========================================================
+            // 11. GÉNÉRATEURS
+            // =========================================================
+            function generateTrees() {
+                const cities = [
+                    [-18.8792, 47.5079],
+                    [-15.7167, 46.3167],
+                    [-12.2833, 49.2833],
+                    [-18.1523, 49.4023],
+                    [-13.3125, 48.2625],
+                    [-21.4333, 47.0833],
+                    [-23.35, 43.6667]
+                ];
+                const features = [];
+                cities.forEach(city => {
+                    for (let i = 0; i < 25; i++) {
+                        features.push({
+                            type: 'Feature',
+                            geometry: {
+                                type: 'Point',
+                                coordinates: [
+                                    city[1] + (Math.random() - 0.5) * 0.06,
+                                    city[0] + (Math.random() - 0.5) * 0.06
+                                ]
+                            },
+                            properties: {}
+                        });
+                    }
+                });
+                return { type: 'FeatureCollection', features };
+            }
+
+            function generatePedestrians() {
+                const cities = [
+                    [-18.8792, 47.5079],
+                    [-15.7167, 46.3167],
+                    [-12.2833, 49.2833],
+                    [-18.1523, 49.4023],
+                    [-13.3125, 48.2625]
+                ];
+                const features = [];
+                cities.forEach(city => {
+                    for (let i = 0; i < 8; i++) {
+                        features.push({
+                            type: 'Feature',
+                            geometry: {
+                                type: 'Point',
+                                coordinates: [
+                                    city[1] + (Math.random() - 0.5) * 0.02,
+                                    city[0] + (Math.random() - 0.5) * 0.02
+                                ]
+                            },
+                            properties: {}
+                        });
+                    }
+                });
+                return { type: 'FeatureCollection', features };
+            }
+
+            // =========================================================
+            // 12. GROUPES SUR LA CARTE
+            // =========================================================
+            function initGroupPositions(center) {
+                groupPositions = {
+                    police: { lat: center[0] + 0.003, lng: center[1] + 0.002 },
+                    gendarmerie: { lat: center[0] - 0.002, lng: center[1] + 0.004 },
+                    groupeA: { lat: center[0] + 0.004, lng: center[1] - 0.003 },
+                    groupeB: { lat: center[0] - 0.001, lng: center[1] - 0.004 },
+                    groupeC: { lat: center[0] + 0.005, lng: center[1] + 0.003 },
+                };
+            }
+
+            function addGroupMarkers() {
+                const markers = [
+                    { id: 'police', pos: groupPositions.police, emoji: '🚔', color: '#f5c842', label: 'Police',
+                        visible: peutVoir('police') },
+                    { id: 'gendarmerie', pos: groupPositions.gendarmerie, emoji: '⭐', color: '#8e44ad',
+                        label: 'Gendarmerie', visible: peutVoir('gendarmerie') },
+                    { id: 'groupeA', pos: groupPositions.groupeA, emoji: '🔴', color: '#e74c3c', label: 'Groupe A',
+                        visible: peutVoir('groupeA') },
+                    { id: 'groupeB', pos: groupPositions.groupeB, emoji: '🟢', color: '#2ecc71', label: 'Groupe B',
+                        visible: peutVoir('groupeB') },
+                    { id: 'groupeC', pos: groupPositions.groupeC, emoji: '🔵', color: '#3498db', label: 'Groupe C',
+                        visible: peutVoir('groupeC') },
+                ];
+
+                markers.forEach(m => {
+                    if (!m.visible) return;
+                    const el = document.createElement('div');
+                    el.className = 'custom-marker';
+                    el.innerHTML = `
+                        <div class="marker-content">
+                            <div class="marker-icon" style="background:${m.color};">
+                                <span>${m.emoji}</span>
+                            </div>
+                            <div class="marker-label">${m.label}</div>
+                        </div>
+                    `;
+                    const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+                        .setLngLat([m.pos.lng, m.pos.lat])
+                        .addTo(map);
+                    groupMarkers[m.id] = marker;
+                });
+            }
+
+            // =========================================================
+            // 13. GÉOLOCALISATION
+            // =========================================================
+            function getUserLocation() {
+                if (!navigator.geolocation) return;
+                navigator.geolocation.getCurrentPosition(
+                    pos => { userLat = pos.coords.latitude;
+                        userLng = pos.coords.longitude; },
+                    () => { userLat = -15.7167;
+                        userLng = 46.3167; },
+                    { enableHighAccuracy: false, timeout: 10000 }
+                );
+                navigator.geolocation.watchPosition(
+                    pos => {
+                        userLat = pos.coords.latitude;
+                        userLng = pos.coords.longitude;
+                        if (positionShared && userMarker) {
+                            userMarker.setLngLat([userLng, userLat]);
+                        }
+                    },
+                    null,
+                    { enableHighAccuracy: true, maximumAge: 10000 }
+                );
+            }
+
+            window.toggleMyPosition = function() {
+                if (!userLat || !userLng) {
+                    showToast('⚠️ GPS non disponible', 'error');
+                    return;
+                }
+
+                if (positionShared) {
+                    if (userMarker) { userMarker.remove();
+                        userMarker = null; }
+                    positionShared = false;
+                    document.getElementById('btnLocate').classList.remove('active');
+                    showToast('🔒 Position masquée', 'info');
+                    addTwMessage('🔄 Système', '🔒 Position masquée', 'system');
+                    playSquelch(0.08);
+                } else {
+                    const info = MATRICE[userProfile.type];
+                    const el = document.createElement('div');
+                    el.className = 'custom-marker';
+                    el.innerHTML = `
+                        <div class="marker-content">
+                            <div class="marker-icon" style="background:${info.couleur};width:34px;height:34px;border:3px solid #fff;box-shadow:0 4px 25px rgba(231,76,60,0.6);font-size:18px;">
+                                <span>📍</span>
+                            </div>
+                            <div class="marker-label" style="background:rgba(0,0,0,0.85);padding:2px 6px;border-radius:3px;border:1px solid ${info.couleur};font-size:7px;">${userProfile.name}</div>
+                        </div>
+                    `;
+                    userMarker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+                        .setLngLat([userLng, userLat])
+                        .addTo(map);
+                    map.flyTo({ center: [userLng, userLat], zoom: 16, pitch: 55, duration: 1200 });
+                    positionShared = true;
+                    document.getElementById('btnLocate').classList.add('active');
+                    showToast('🟢 Position activée', 'success');
+                    addTwMessage('🔄 Système', '📍 Position activée', 'system');
+                    playSquelch(0.12);
+                }
+            };
+
+            // =========================================================
+            // 14. ACTIONS GROUPES
+            // =========================================================
+            window.showOnMap = function(team) {
+                const pos = groupPositions[team] || { lat: -15.7167, lng: 46.3167 };
+                map.flyTo({ center: [pos.lng, pos.lat], zoom: 16.5, pitch: 55, duration: 1200 });
+                showToast('📍 ' + team, 'info');
+                playSquelch(0.06);
+            };
+
+            window.callTeam = function(team) {
+                showToast('📡 Appel ' + team, 'info');
+                addTwMessage('🔄 Système', '📡 Appel ' + team + '...', 'system');
+                simulerTransmission(1500);
+                setTimeout(() => {
+                    addTwMessage(team, '✅ Réponse reçue', '');
+                    showToast('✅ Réponse', 'success');
+                    playSquelch(0.1);
+                }, 1500);
+            };
+
+            // =========================================================
+            // 15. THEME JOUR/NUIT
+            // =========================================================
+            function applyTheme() {
+                const toggle = document.getElementById('themeToggle');
+                const icon = document.getElementById('themeIcon');
+                const mapEl = document.getElementById('map');
+
+                if (isNight) {
+                    icon.textContent = '🌙';
+                    toggle.classList.add('night');
+                    mapEl.style.filter = 'brightness(0.6) saturate(0.7) contrast(1.2)';
+                    document.body.style.background = '#050510';
+                    try {
+                        map.setPaintProperty('pedestrians-layer', 'circle-color', '#ffd700');
+                        map.setPaintProperty('pedestrians-layer', 'circle-radius', 4);
+                    } catch (e) {}
+                } else {
+                    icon.textContent = '☀️';
+                    toggle.classList.remove('night');
+                    mapEl.style.filter = 'brightness(1) saturate(1) contrast(1)';
+                    document.body.style.background = '#0b1725';
+                    try {
+                        map.setPaintProperty('pedestrians-layer', 'circle-color', '#4facfe');
+                        map.setPaintProperty('pedestrians-layer', 'circle-radius', 3);
+                    } catch (e) {}
+                }
+            }
+
+            document.getElementById('themeToggle').addEventListener('click', function() {
+                isNight = !isNight;
+                applyTheme();
+            });
+
+            (function() {
+                const h = new Date().getHours();
+                isNight = (h >= 19 || h < 6);
+                setTimeout(applyTheme, 500);
+            })();
+
+            // =========================================================
+            // 16. TALKIE-WALKIE
+            // =========================================================
+            function addTwMessage(who, text, cls) {
+                const container = document.getElementById('twMessages');
+                const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                const div = document.createElement('div');
+                div.className = 'tw-msg';
+                div.innerHTML =
+                    `<span class="who ${cls || ''}">${who}</span> <span class="time">${time}</span> — ${text}`;
+                container.appendChild(div);
+                container.scrollTop = container.scrollHeight;
+                while (container.children.length > 50) container.removeChild(container.firstChild);
+            }
+            window.addTwMessage = addTwMessage;
+
             function initPeerJS() {
                 peerId = getPeerId();
-
-                peer = new Peer(peerId, {
-                    config: {
-                        iceServers: [
-                            { urls: 'stun:stun.l.google.com:19302' },
-                            { urls: 'stun:stun1.l.google.com:19302' }
-                        ]
-                    }
-                });
-
-                peer.on('open', (id) => {
-                    console.log('🔊 PeerJS connecté avec ID:', id);
-                    document.getElementById('twChannel').textContent = '🔓 ID: ' + id;
-                    document.getElementById('twStatus').textContent = `🎙️ Prêt · ID: ${id}`;
-                    showToast('🔊 Talkie-Walkie prêt !', 'success');
-                    addTwMessage('🔄 Système', `🎙️ Votre ID: ${id}`, 'system');
-                });
-
-                peer.on('call', (call) => {
-                    addTwMessage('📞 Appel', `Appel entrant de ${call.peer}`, 'system');
-                    showToast(`📞 Appel de ${call.peer}`, 'info');
-
-                    navigator.mediaDevices.getUserMedia({
-                        audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 }
-                    })
-                    .then((stream) => {
-                        localStream = stream;
-                        call.answer(stream);
-                        startCall(call);
-                    })
-                    .catch((err) => {
-                        showToast('⚠️ Erreur micro: ' + err.message, 'error');
+                try {
+                    peer = new Peer(peerId, {
+                        config: {
+                            iceServers: [
+                                { urls: 'stun:stun.l.google.com:19302' },
+                                { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject',
+                                    credential: 'openrelayproject' },
+                                { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject',
+                                    credential: 'openrelayproject' }
+                            ]
+                        },
+                        debug: 0
                     });
-                });
-
-                peer.on('error', (err) => {
-                    console.error('Erreur PeerJS:', err);
-                    if (err.message.includes('ID')) {
-                        localStorage.removeItem('fokon_peer_id');
-                        setTimeout(() => location.reload(), 1000);
-                    }
-                });
-
-                peer.on('disconnected', () => {
-                    document.getElementById('twStatus').textContent = '⚠️ Déconnecté du serveur';
-                });
+                    peer.on('open', (id) => {
+                        document.getElementById('twChannel').textContent = '🔓 ID: ' + id.substring(0, 8);
+                        document.getElementById('twStatus').textContent = '🎙️ Prêt';
+                        addTwMessage('🔄 Système', '🎙️ ID: ' + id.substring(0, 8), 'system');
+                        playSquelch(0.12);
+                    });
+                    peer.on('call', (call) => {
+                        addTwMessage('📞 Appel', 'Appel entrant', 'system');
+                        simulerTransmission(1000);
+                        navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true,
+                                noiseSuppression: true } })
+                            .then(stream => {
+                                localStream = stream;
+                                call.answer(stream);
+                                startCall(call);
+                            })
+                            .catch(() => showToast('⚠️ Erreur micro', 'error'));
+                    });
+                } catch (e) { console.warn('PeerJS non disponible'); }
             }
 
             function startCall(call) {
@@ -1196,274 +2006,240 @@
                 document.getElementById('twSpeak').disabled = true;
                 document.getElementById('twListen').disabled = true;
                 document.getElementById('twStop').disabled = false;
-                document.getElementById('twStatus').textContent = '🔊 En communication';
                 document.getElementById('audioIndicator').className = 'audio-indicator active';
                 addTwMessage('🔊 Communication', 'Appel établi', 'system');
-                showToast('🔊 En communication !', 'success');
+                playSquelch(0.1);
 
                 call.on('stream', (stream) => {
                     const audio = new Audio();
                     audio.srcObject = stream;
-                    audio.play().catch(e => {
-                        showToast('🔊 Cliquez pour activer le son', 'info');
-                    });
-                    addTwMessage('🎧 Audio', 'Flux audio reçu', 'system');
-
-                    // Animation audio wave
-                    const audioCtx = new AudioContext();
-                    const source = audioCtx.createMediaStreamSource(stream);
-                    const analyser = audioCtx.createAnalyser();
-                    analyser.fftSize = 256;
+                    audio.play().catch(() => {});
+                    const ctx = new AudioContext();
+                    const source = ctx.createMediaStreamSource(stream);
+                    const analyser = ctx.createAnalyser();
+                    analyser.fftSize = 128;
                     source.connect(analyser);
-                    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+                    const data = new Uint8Array(analyser.frequencyBinCount);
 
-                    function animateAudio() {
+                    function animate() {
                         if (!isCallActive) return;
-                        analyser.getByteFrequencyData(dataArray);
+                        analyser.getByteFrequencyData(data);
                         let sum = 0;
-                        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-                        const avg = sum / dataArray.length;
-                        updateAudioWave(Math.min(1, avg / 255 * 2));
-                        requestAnimationFrame(animateAudio);
+                        for (let i = 0; i < data.length; i++) sum += data[i];
+                        const avg = sum / data.length;
+                        const bars = document.querySelectorAll('.audio-wave span');
+                        const h = Math.min(14, Math.max(3, avg / 255 * 14));
+                        bars.forEach((bar) => {
+                            bar.style.height = Math.max(3, h * (0.5 + Math.random() * 0.5)) + 'px';
+                            bar.classList.add('active');
+                        });
+                        requestAnimationFrame(animate);
                     }
-                    animateAudio();
+                    animate();
                 });
 
-                call.on('close', () => {
-                    endCall('🔚 L\'autre utilisateur a raccroché');
-                });
-
-                call.on('error', () => {
-                    endCall('❌ Erreur de communication');
-                });
+                call.on('close', () => endCall('🔚 Appel terminé'));
+                call.on('error', () => endCall('❌ Erreur'));
             }
 
             function endCall(reason) {
-                if (currentCall) {
-                    currentCall.close();
-                    currentCall = null;
-                }
-                if (localStream) {
-                    localStream.getTracks().forEach(t => t.stop());
-                    localStream = null;
-                }
+                if (currentCall) { currentCall.close();
+                    currentCall = null; }
+                if (localStream) { localStream.getTracks().forEach(t => t.stop());
+                    localStream = null; }
                 isCallActive = false;
                 document.getElementById('twSpeak').disabled = false;
                 document.getElementById('twListen').disabled = false;
                 document.getElementById('twStop').disabled = true;
-                document.getElementById('twStatus').textContent = '🔗 Déconnecté';
                 document.getElementById('audioIndicator').className = 'audio-indicator';
-                resetAudioWave();
-                if (reason) {
-                    addTwMessage('🔄 Système', reason, 'system');
-                    showToast(reason, 'info');
-                }
+                document.querySelectorAll('.audio-wave span').forEach(b => { b.style.height = '4px';
+                    b.classList.remove('active'); });
+                stopRadioStatic();
+                if (reason) { addTwMessage('🔄 Système', reason, 'system');
+                    showToast(reason, 'info'); }
             }
 
-            function updateAudioWave(level) {
-                const bars = document.querySelectorAll('.audio-wave span');
-                const h = Math.min(20, Math.max(4, level * 20));
-                bars.forEach((bar) => {
-                    bar.style.height = Math.max(4, h * (0.5 + Math.random() * 0.5)) + 'px';
-                    bar.classList.add('active');
-                });
-            }
-
-            function resetAudioWave() {
-                const bars = document.querySelectorAll('.audio-wave span');
-                const heights = [6, 12, 18, 10, 14];
-                bars.forEach((bar, i) => {
-                    bar.style.height = heights[i] + 'px';
-                    bar.classList.remove('active');
-                });
-            }
-
-            // =========================================================
-            // 13. BOUTONS TALKIE
-            // =========================================================
             document.getElementById('twSpeak').addEventListener('click', function() {
-                if (isCallActive) {
-                    showToast('⚠️ Vous êtes déjà en communication', 'error');
-                    return;
-                }
-
-                if (!isOnline) {
-                    this.classList.add('recording');
-                    document.getElementById('audioIndicator').className = 'audio-indicator recording';
-                    document.getElementById('twStatus').textContent = '🔴 Simulation transmission...';
-                    addTwMessage('📢 Vous', 'Message vocal (simulation hors-ligne)', '');
-                    setTimeout(() => {
-                        this.classList.remove('recording');
-                        document.getElementById('audioIndicator').className = 'audio-indicator';
-                        document.getElementById('twStatus').textContent = '✅ Message envoyé (simulation)';
-                        showToast('✅ Message envoyé', 'success');
-                    }, 2000);
-                    return;
-                }
-
-                const targetId = prompt('Entrez l\'ID de l\'autre appareil:');
-                if (!targetId) return;
-                if (targetId === peerId) {
-                    showToast('⚠️ Vous ne pouvez pas vous appeler vous-même', 'error');
-                    return;
-                }
-
-                document.getElementById('twStatus').textContent = '📞 Appel en cours...';
+                if (isCallActive) { showToast('⚠️ Déjà en comm', 'error'); return; }
+                const targetId = prompt('Entrez l\'ID de l\'autre appareil:\n(Votre ID: ' + peerId + ')');
+                if (!targetId || targetId === peerId) return;
                 this.disabled = true;
                 this.classList.add('recording');
-                addTwMessage('📞 Appel', 'Appel vers ' + targetId + '...', 'system');
-
-                navigator.mediaDevices.getUserMedia({
-                    audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 }
-                })
-                .then((stream) => {
-                    localStream = stream;
-                    const call = peer.call(targetId, stream);
-                    startCall(call);
-                })
-                .catch((err) => {
-                    showToast('❌ Erreur micro: ' + err.message, 'error');
-                    document.getElementById('twStatus').textContent = '❌ Micro indisponible';
-                    this.disabled = false;
-                    this.classList.remove('recording');
-                });
+                addTwMessage('📞 Appel', 'Appel vers ' + targetId, 'system');
+                simulerTransmission(1000);
+                navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
+                    .then(stream => {
+                        localStream = stream;
+                        const call = peer.call(targetId, stream, { metadata: { role: userProfile?.type } });
+                        startCall(call);
+                    })
+                    .catch(() => { showToast('❌ Erreur micro', 'error');
+                        this.disabled = false;
+                        this.classList.remove('recording'); });
             });
 
             document.getElementById('twListen').addEventListener('click', function() {
                 if (this.classList.contains('listening')) {
                     this.classList.remove('listening');
                     this.textContent = '🎧 Écouter';
-                    if (listenInterval) {
-                        clearInterval(listenInterval);
-                        listenInterval = null;
-                    }
-                    document.getElementById('twStatus').textContent = '🔇 Écoute désactivée';
-                    showToast('🔇 Écoute désactivée', 'info');
+                    if (listenInterval) { clearInterval(listenInterval);
+                        listenInterval = null; }
+                    stopRadioStatic();
+                    document.getElementById('twStatus').textContent = '🔇 Arrêté';
                 } else {
                     this.classList.add('listening');
                     this.textContent = '⏹️ Écoute...';
-                    document.getElementById('twStatus').textContent = '🎧 Écoute active · Réception audio';
-                    showToast('🎧 Écoute active', 'success');
-
+                    document.getElementById('twStatus').textContent = '🎧 Écoute active';
+                    playRadioStatic(0.04);
+                    playSquelch(0.06);
                     listenInterval = setInterval(() => {
                         if (this.classList.contains('listening')) {
-                            simulateOtherMessage();
+                            const msgs = [
+                                { who: 'Groupe A', text: 'Patrouille nord OK', cls: 'gA' },
+                                { who: 'Groupe B', text: 'Rondes actives sud', cls: 'gB' },
+                                { who: 'Groupe C', text: 'Intervention est en cours', cls: 'gC' },
+                            ];
+                            const r = msgs[Math.floor(Math.random() * msgs.length)];
+                            addTwMessage(r.who, r.text, r.cls);
+                            playSquelch(0.05);
                         }
-                    }, 5000);
+                    }, 4000);
                 }
             });
 
             document.getElementById('twStop').addEventListener('click', function() {
-                if (isCallActive) {
-                    endCall('🔚 Vous avez raccroché');
-                }
+                if (isCallActive) endCall('🔚 Raccroché');
             });
 
             document.getElementById('twClear').addEventListener('click', function() {
-                twMessages.innerHTML = '';
-                addTwMessage('🔄 Système', '🗑️ Messages effacés', 'system');
+                document.getElementById('twMessages').innerHTML = '';
+                addTwMessage('🔄 Système', '🗑️ Effacé', 'system');
+                playPTTClick();
             });
 
             // =========================================================
-            // 14. ACTIONS DES GROUPES
+            // 17. ALERTE
             // =========================================================
-            window.sendPosition = function(group) {
-                if (group === 'A') {
-                    if (userLat && userLng) {
-                        map.setView([userLat, userLng], 17);
-                        if (userMarker) userMarker.openPopup();
-                    }
-                } else if (groupMarkers[group]) {
-                    const pos = groupPositions[group];
-                    map.setView([pos.lat, pos.lng], 17);
-                    groupMarkers[group].openPopup();
-                }
-                showToast(`📍 Position du Groupe ${group} sur la carte`, 'info');
-                addTwMessage(`Groupe ${group}`, `📍 Position partagée`, group === 'B' ? 'g2' : group === 'C' ? 'g3' : '');
-            };
+            document.getElementById('btnAlert').addEventListener('click', function() {
+                if (alertActive) { showToast('⚠️ Alerte en cours', 'error'); return; }
+                if (!userLat || !userLng) { showToast('⚠️ GPS non disponible', 'error'); return; }
+                if (!positionShared) { window.toggleMyPosition(); }
 
-            window.callGroup = function(group) {
-                showToast(`📡 Appel vocal vers le Groupe ${group}`, 'info');
-                addTwMessage(`🔄 Système`, `📡 Appel du Groupe ${group} en cours...`, 'system');
-                setTimeout(() => {
-                    addTwMessage(`Groupe ${group}`, `✅ Réponse du Groupe ${group}`, group === 'B' ? 'g2' : 'g3');
-                    showToast(`✅ Groupe ${group} a répondu`, 'success');
-                }, 2000);
-            };
+                alertActive = true;
+                this.disabled = true;
+                this.innerHTML = '🚨 ALERTE... <span class="sub">⏳ Intervention</span>';
 
-            // =========================================================
-            // 15. SÉLECTEUR DE GROUPE
-            // =========================================================
-            document.getElementById('groupSelector').addEventListener('change', function() {
-                currentGroup = this.value;
+                playAlertSound();
 
-                document.getElementById('groupABadge').textContent = currentGroup === 'A' ? 'vous' : '';
+                const el = document.createElement('div');
+                el.className = 'alert-marker';
+                el.innerHTML = '🚨<span class="label">ALERTE</span>';
+                const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+                    .setLngLat([userLng, userLat])
+                    .addTo(map);
 
-                // Mettre à jour le marqueur utilisateur
-                if (userLat && userLng) {
-                    updateUserPosition(userLat, userLng);
-                }
-
-                showToast(`🔄 Vous êtes maintenant dans le Groupe ${currentGroup}`, 'info');
-                addTwMessage(`🔄 Système`, `👤 ${getUserId().substr(0, 6)} rejoint le Groupe ${currentGroup}`, 'system');
-
-                if (useFirebase && db) {
-                    db.ref('users/' + getUserId()).set({
-                        group: currentGroup,
-                        timestamp: Date.now()
+                const circleData = {
+                    type: 'Feature',
+                    geometry: { type: 'Point', coordinates: [userLng, userLat] },
+                    properties: {}
+                };
+                try {
+                    map.addSource('alert-circle', {
+                        type: 'geojson',
+                        data: { type: 'FeatureCollection', features: [circleData] }
                     });
-                }
+                    map.addLayer({
+                        id: 'alert-circle-layer',
+                        type: 'circle',
+                        source: 'alert-circle',
+                        paint: {
+                            'circle-radius': 15,
+                            'circle-color': '#e74c3c',
+                            'circle-opacity': 0.4,
+                            'circle-stroke-color': '#e74c3c',
+                            'circle-stroke-width': 2,
+                        }
+                    });
+                    let r = 15;
+                    const grow = setInterval(() => {
+                        r += 8;
+                        try {
+                            map.setPaintProperty('alert-circle-layer', 'circle-radius', r);
+                            map.setPaintProperty('alert-circle-layer', 'circle-opacity', Math.max(0, 0.4 - r /
+                            1000));
+                        } catch (e) {}
+                        if (r > 1000) { clearInterval(grow);
+                            try { map.removeLayer('alert-circle-layer');
+                                map.removeSource('alert-circle'); } catch (e) {} }
+                    }, 60);
+                } catch (e) {}
+
+                addTwMessage('🚨 ALERTE', '🔴 URGENCE · ' + userProfile.name, 'alert');
+                showToast('🚨 ALERTE ENVOYÉE', 'error');
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 500]);
+
+                setTimeout(() => {
+                    addTwMessage('Groupe A', '✅ Reçu ! Intervention', 'gA');
+                    playSquelch(0.1);
+                }, 1200);
+                setTimeout(() => {
+                    addTwMessage('Groupe B', '✅ En route', 'gB');
+                    playSquelch(0.1);
+                }, 1800);
+                setTimeout(() => {
+                    addTwMessage('Groupe C', '✅ On arrive', 'gC');
+                    playSquelch(0.1);
+                }, 2400);
+                setTimeout(() => {
+                    addTwMessage('🔄 Système', '📡 Forces notifiées', 'system');
+                    playSquelch(0.1);
+                }, 3000);
+
+                setTimeout(() => {
+                    alertActive = false;
+                    this.disabled = false;
+                    this.innerHTML =
+                        '🚨 SIGNALER UNE URGENCE <span class="sub">⚠️ Alerte immédiate · Tous les intervenants</span>';
+                    showToast('✅ Alerte terminée', 'success');
+                    addTwMessage('🔄 Système', '✅ Fin d\'alerte', 'system');
+                    playSquelch(0.1);
+                    try { marker.remove(); } catch (e) {}
+                    try { map.removeLayer('alert-circle-layer');
+                        map.removeSource('alert-circle'); } catch (e) {}
+                }, 25000);
             });
 
             // =========================================================
-            // 16. RACCOURCIS CLAVIER
+            // 18. RACCOURCIS
             // =========================================================
             document.addEventListener('keydown', function(e) {
                 if (e.altKey && e.key === 'a') { e.preventDefault();
-                    btnAlert.click(); }
+                    document.getElementById('btnAlert').click(); }
                 if (e.altKey && e.key === 'l') { e.preventDefault();
                     document.getElementById('twListen').click(); }
                 if (e.altKey && e.key === 'p') { e.preventDefault();
                     document.getElementById('twSpeak').click(); }
-                if (e.altKey && e.key === 's') { e.preventDefault();
-                    document.getElementById('twStop').click(); }
+                if (e.altKey && e.key === 'v') { e.preventDefault();
+                    window.toggleMyPosition(); }
             });
 
             // =========================================================
-            // 17. INITIALISATION
+            // 19. DÉTECTION CONNEXION
             // =========================================================
-            function init() {
-                initPeerJS();
+            window.addEventListener('online', () => {
+                document.getElementById('offlineBar').classList.remove('show');
+                document.getElementById('statusDot').style.background = '#5dffa0';
+            });
+            window.addEventListener('offline', () => {
+                document.getElementById('offlineBar').classList.add('show');
+                document.getElementById('statusDot').style.background = '#e74c3c';
+            });
 
-                // Simulation des compteurs
-                setInterval(() => {
-                    document.getElementById('patrolCount').textContent = Math.floor(Math.random() * 4 + 2);
-                    document.getElementById('memberCount').textContent = Math.floor(Math.random() * 10 + 10);
-                }, 30000);
-
-                // Messages de démarrage
-                setTimeout(() => {
-                    addTwMessage('🔄 Système', '🔰 FOKON\'ALERT prêt · 3 groupes connectés', 'system');
-                }, 500);
-                setTimeout(() => {
-                    addTwMessage('Groupe B', '✅ Patrouille en cours', 'g2');
-                }, 1500);
-                setTimeout(() => {
-                    addTwMessage('Groupe C', '✅ Prêt · secteur est', 'g3');
-                }, 2500);
-
-                console.log('🛡️ FOKON\'ALERT prêt !');
-                console.log('📡 Mode:', useFirebase ? '🔥 Multi-utilisateur' : '📡 Local');
-                console.log('👤 ID:', getUserId());
-                console.log('🎤 ID PeerJS:', peerId);
-                console.log('👥 Groupes en déplacement temps réel');
-                console.log('💡 Raccourcis: Alt+A (alerte) Alt+L (écouter) Alt+P (parler) Alt+S (stop)');
-            }
-
-            init();
+            console.log('🛡️ FOKON\'ALERT 3D — Groupes A, B, C');
+            console.log('🌳 Arbres animés · Piétons · Bâtiments 3D');
+            console.log('💡 Alt+A=Alert · Alt+L=Écouter · Alt+P=Parler · Alt+V=Position');
 
         })();
     </script>
-
 </body>
-</html>
+    </html>
