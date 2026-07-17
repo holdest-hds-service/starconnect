@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
     <meta name="theme-color" content="#0b1725" />
-    <title>FOKON'ALERT — Sécurité Communautaire</title>
+    <title>FOKON'ALERT — Groupes A, B, C + Itinéraires + Hors-ligne</title>
 
     <!-- Mapbox GL -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.css" rel="stylesheet" />
@@ -31,8 +31,11 @@
             background: #0b1725;
             color: #e8edf2;
             -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
+        /* ===== CARTE PLEIN ÉCRAN ===== */
         #map {
             position: fixed;
             top: 0;
@@ -45,7 +48,7 @@
             background: #0a1520;
         }
 
-        /* ===== OVERLAY ===== */
+        /* ===== OVERLAY PRINCIPAL ===== */
         .overlay {
             position: fixed;
             top: 0;
@@ -83,6 +86,19 @@
         @keyframes pulseBanner {
             0%, 100% { background: #e67e22; }
             50% { background: #c0392b; }
+        }
+        .offline-banner .badge {
+            background: rgba(0,0,0,0.3);
+            padding: 1px 8px;
+            border-radius: 20px;
+            font-size: 0.4rem;
+            margin-left: 4px;
+        }
+        .offline-banner .sub {
+            display: block;
+            font-size: 0.35rem;
+            font-weight: 400;
+            opacity: 0.9;
         }
 
         /* ===== HEADER ===== */
@@ -137,6 +153,19 @@
             align-items: center;
             gap: 4px;
         }
+        .header .pending-badge-global {
+            background: #e67e22;
+            color: #fff;
+            padding: 1px 8px;
+            border-radius: 20px;
+            font-size: 0.45rem;
+            font-weight: 700;
+            display: none;
+            animation: pulseBanner 2s infinite;
+        }
+        .header .pending-badge-global.show {
+            display: inline-block;
+        }
         .btn-logout {
             background: transparent;
             border: 1px solid #e74c3c;
@@ -156,6 +185,7 @@
             border-bottom: 1px solid rgba(255,255,255,0.05);
             background: rgba(10, 30, 50, 0.5);
             backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             border-radius: 8px;
             margin-top: 2px;
         }
@@ -176,6 +206,7 @@
         .loc-bar {
             background: rgba(15, 34, 56, 0.7);
             backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             padding: 3px 12px;
             display: flex;
             justify-content: space-between;
@@ -183,6 +214,7 @@
             flex-wrap: wrap;
             gap: 3px;
             font-size: 0.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
             border-radius: 8px;
             margin-top: 2px;
         }
@@ -201,102 +233,7 @@
             font-weight: 700;
         }
 
-        /* ===== LÉGENDE EN HAUT À GAUCHE ===== */
-        .map-legend {
-            position: fixed;
-            top: 70px;
-            left: 8px;
-            z-index: 15;
-            background: rgba(10, 26, 42, 0.85);
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
-            padding: 6px 10px;
-            border: 1px solid rgba(255,255,255,0.08);
-            pointer-events: none;
-            min-width: 100px;
-        }
-        .map-legend .legend-title {
-            font-size: 0.45rem;
-            font-weight: 700;
-            color: #f5c842;
-            margin-bottom: 3px;
-            text-align: center;
-        }
-        .map-legend .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin: 2px 0;
-            font-size: 0.4rem;
-            color: #cde0f5;
-        }
-        .legend-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.2);
-            flex-shrink: 0;
-        }
-
-        /* ===== MENU VILLES EN HAUT À DROITE ===== */
-        .city-menu {
-            position: fixed;
-            top: 70px;
-            right: 8px;
-            z-index: 15;
-            background: rgba(10, 26, 42, 0.85);
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.08);
-            overflow: hidden;
-        }
-        .city-menu .city-toggle {
-            background: transparent;
-            border: none;
-            color: #f5c842;
-            padding: 6px 12px;
-            font-size: 0.55rem;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: inherit;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            width: 100%;
-        }
-        .city-menu .city-toggle:hover {
-            background: rgba(255,215,0,0.1);
-        }
-        .city-menu .city-list {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-        }
-        .city-menu .city-list.open {
-            max-height: 300px;
-        }
-        .city-menu .city-list button {
-            display: block;
-            width: 100%;
-            padding: 4px 12px;
-            background: transparent;
-            border: none;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            color: #cde0f5;
-            font-size: 0.45rem;
-            font-weight: 500;
-            cursor: pointer;
-            font-family: inherit;
-            text-align: left;
-            transition: background 0.2s;
-        }
-        .city-menu .city-list button:hover {
-            background: rgba(255,215,0,0.15);
-            color: #f5c842;
-        }
-
-        /* ===== BOUTONS CARTE ===== */
+        /* ===== BOUTONS SUR LA CARTE ===== */
         .map-controls {
             position: fixed;
             bottom: 100px;
@@ -311,10 +248,11 @@
             pointer-events: auto;
             background: rgba(10, 26, 42, 0.85);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 30px;
             color: #fff;
-            padding: 6px 12px;
+            padding: 6px 10px;
             font-size: 0.5rem;
             font-weight: 600;
             cursor: pointer;
@@ -326,7 +264,11 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         .map-controls button:hover {
-            background: rgba(255,215,0,0.2);
+            background: rgba(255, 215, 0, 0.2);
+        }
+        .map-controls button.active {
+            background: #e74c3c;
+            border-color: #e74c3c;
         }
 
         /* ===== POSITION TOGGLE ===== */
@@ -337,23 +279,122 @@
             z-index: 15;
             background: rgba(10, 26, 42, 0.85);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 25px;
-            padding: 6px 14px;
+            padding: 4px 10px;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             cursor: pointer;
-            font-size: 0.5rem;
+            font-size: 0.45rem;
             font-weight: 600;
             color: #fff;
             transition: all 0.3s;
             pointer-events: auto;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         .position-toggle.active {
             background: #e74c3c;
             border-color: #e74c3c;
+        }
+
+        /* ===== MENU VILLES EN HAUT À DROITE ===== */
+        .city-menu-container {
+            position: fixed;
+            top: 70px;
+            right: 8px;
+            z-index: 20;
+            pointer-events: none;
+        }
+        .city-menu-container .city-toggle {
+            pointer-events: auto;
+            background: rgba(10, 26, 42, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            color: #fff;
+            padding: 4px 12px;
+            font-size: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .city-menu-container .city-dropdown {
+            pointer-events: auto;
+            display: none;
+            background: rgba(10, 26, 42, 0.92);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 10px;
+            padding: 6px 8px;
+            margin-top: 4px;
+            border: 1px solid rgba(255,255,255,0.05);
+            min-width: 120px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+        }
+        .city-menu-container .city-dropdown.open {
+            display: block;
+        }
+        .city-menu-container .city-dropdown button {
+            display: block;
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #e8edf2;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.45rem;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            text-align: left;
+            transition: background 0.15s;
+        }
+        .city-menu-container .city-dropdown button:hover {
+            background: rgba(255, 215, 0, 0.15);
+        }
+
+        /* ===== LÉGENDE EN HAUT À GAUCHE ===== */
+        .map-legend {
+            position: fixed;
+            top: 70px;
+            left: 8px;
+            z-index: 12;
+            background: rgba(10, 26, 42, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 0.4rem;
+            color: #8ab4d6;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            pointer-events: none;
+            min-width: 90px;
+        }
+        .map-legend .legend-title {
+            font-size: 0.45rem;
+            font-weight: 700;
+            color: #f5c842;
+            margin-bottom: 3px;
+        }
+        .map-legend .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin: 2px 0;
+        }
+        .legend-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            flex-shrink: 0;
         }
 
         /* ===== THEME TOGGLE ===== */
@@ -362,11 +403,12 @@
             bottom: 60px;
             right: 8px;
             z-index: 15;
-            background: rgba(10, 26, 42, 0.85);
+            background: rgba(10, 26, 42, 0.7);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.1);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
-            padding: 4px 12px;
+            padding: 3px 10px;
             color: #fff;
             font-size: 0.5rem;
             font-weight: 600;
@@ -377,22 +419,21 @@
             font-family: inherit;
             transition: all 0.3s;
             pointer-events: auto;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         .theme-toggle.night {
             background: rgba(10, 10, 30, 0.8);
-            border-color: rgba(255,215,0,0.2);
+            border-color: rgba(255, 215, 0, 0.2);
         }
         .theme-toggle .track {
             width: 28px;
             height: 16px;
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 8px;
             position: relative;
             transition: all 0.3s;
         }
         .theme-toggle.night .track {
-            background: rgba(255,215,0,0.2);
+            background: rgba(255, 215, 0, 0.2);
         }
         .theme-toggle .thumb {
             width: 12px;
@@ -414,7 +455,7 @@
             display: flex;
             flex-direction: column;
             gap: 4px;
-            max-height: 45vh;
+            max-height: 50vh;
         }
 
         /* ===== GROUPES ===== */
@@ -440,9 +481,10 @@
         .group-card {
             background: rgba(17, 43, 66, 0.85);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border-radius: 10px;
             padding: 6px 10px;
-            min-width: 110px;
+            min-width: 120px;
             flex-shrink: 0;
             border-left: 3px solid #f5c842;
             cursor: pointer;
@@ -455,7 +497,7 @@
         }
         .group-card .g-name {
             font-weight: 700;
-            font-size: 0.55rem;
+            font-size: 0.6rem;
             display: flex;
             align-items: center;
             gap: 4px;
@@ -468,26 +510,34 @@
             font-size: 0.4rem;
             color: #5a7f9e;
         }
-        .group-card .g-actions {
-            margin-top: 4px;
+        .group-card .g-details {
+            font-size: 0.4rem;
+            color: #4a6a88;
             display: flex;
             gap: 4px;
             flex-wrap: wrap;
         }
+        .group-card .g-details span {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 0 4px;
+            border-radius: 6px;
+        }
+        .group-card .g-actions {
+            margin-top: 3px;
+            display: flex;
+            gap: 3px;
+            flex-wrap: wrap;
+        }
         .group-card .g-actions button {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             color: #b6cdff;
-            padding: 2px 10px;
+            padding: 1px 8px;
             border-radius: 12px;
             font-size: 0.4rem;
             font-weight: 600;
             cursor: pointer;
             font-family: inherit;
-            transition: all 0.2s;
-        }
-        .group-card .g-actions button:hover {
-            background: rgba(255,215,0,0.15);
         }
         .group-card .g-actions button.primary {
             background: #f5c842;
@@ -495,9 +545,14 @@
             border-color: #f5c842;
         }
         .group-card .g-actions button.route {
-            background: rgba(46,204,113,0.2);
+            background: rgba(46, 204, 113, 0.2);
             border-color: #2ecc71;
             color: #2ecc71;
+        }
+        .group-card .g-actions button.call {
+            background: rgba(52, 152, 219, 0.2);
+            border-color: #3498db;
+            color: #3498db;
         }
         .group-card.active-group {
             border-left-color: #ffd700;
@@ -532,7 +587,7 @@
             font-size: 0.7rem;
             font-weight: 800;
             text-transform: uppercase;
-            box-shadow: 0 3px 0 #78281f, 0 4px 20px rgba(231,76,60,0.25);
+            box-shadow: 0 3px 0 #78281f, 0 4px 20px rgba(231, 76, 60, 0.25);
             cursor: pointer;
             font-family: inherit;
             transition: all 0.08s;
@@ -574,6 +629,7 @@
         .tw-section {
             background: rgba(13, 34, 54, 0.85);
             backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-radius: 10px;
             padding: 6px 8px;
             border: 1px solid rgba(255,255,255,0.05);
@@ -589,12 +645,12 @@
             font-size: 0.55rem;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
         }
         .tw-header .tw-title .audio-indicator {
             display: inline-block;
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
             border-radius: 50%;
             background: #4a6a88;
             transition: background 0.3s;
@@ -603,18 +659,22 @@
             background: #2ecc71;
             animation: pulse 1s infinite;
         }
+        .tw-header .tw-title .audio-indicator.recording {
+            background: #e74c3c;
+            animation: pulse 0.5s infinite;
+        }
         .tw-header .tw-channel {
-            background: rgba(26,58,85,0.5);
-            padding: 1px 10px;
+            background: rgba(26, 58, 85, 0.5);
+            padding: 1px 8px;
             border-radius: 20px;
             font-size: 0.4rem;
             color: #7fb6e6;
         }
         .tw-messages {
-            background: rgba(7,23,37,0.7);
+            background: rgba(7, 23, 37, 0.7);
             border-radius: 6px;
             padding: 4px 8px;
-            max-height: 45px;
+            max-height: 50px;
             overflow-y: auto;
             font-size: 0.5rem;
             line-height: 1.3;
@@ -629,7 +689,7 @@
         }
         .tw-msg {
             padding: 1px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
         }
         .tw-msg .who {
             font-weight: 700;
@@ -645,20 +705,28 @@
             font-size: 0.4rem;
             margin-left: 3px;
         }
+        .tw-msg .pending-badge {
+            background: #e67e22;
+            color: #fff;
+            font-size: 0.35rem;
+            padding: 0 4px;
+            border-radius: 8px;
+            margin-left: 3px;
+        }
         .tw-controls {
             display: flex;
-            gap: 4px;
+            gap: 3px;
             flex-wrap: wrap;
         }
         .tw-controls button {
             flex: 1;
-            min-width: 40px;
-            padding: 4px 10px;
+            min-width: 35px;
+            padding: 4px 8px;
             border: none;
             border-radius: 20px;
             font-weight: 700;
             font-size: 0.45rem;
-            background: rgba(26,58,85,0.7);
+            background: rgba(26, 58, 85, 0.7);
             color: #cde0f5;
             cursor: pointer;
             font-family: inherit;
@@ -692,6 +760,24 @@
             text-align: center;
             margin-top: 2px;
         }
+        .audio-wave {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            height: 14px;
+            margin: 0 3px;
+        }
+        .audio-wave span {
+            display: inline-block;
+            width: 2px;
+            height: 4px;
+            background: #4a6a88;
+            border-radius: 2px;
+            transition: height 0.1s;
+        }
+        .audio-wave span.active {
+            background: #2ecc71;
+        }
 
         /* ===== TOAST ===== */
         .toast {
@@ -699,8 +785,9 @@
             top: 50px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(26,42,62,0.95);
+            background: rgba(26, 42, 62, 0.95);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             padding: 6px 16px;
             border-radius: 30px;
             font-weight: 600;
@@ -737,8 +824,8 @@
             align-items: center;
         }
         .custom-marker .marker-icon {
-            width: 26px;
-            height: 26px;
+            width: 24px;
+            height: 24px;
             border-radius: 50% 50% 50% 0;
             transform: rotate(-45deg);
             display: flex;
@@ -746,13 +833,13 @@
             justify-content: center;
             border: 2px solid #fff;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            font-size: 14px;
+            font-size: 12px;
         }
         .custom-marker .marker-icon span {
             transform: rotate(45deg);
         }
         .custom-marker .marker-label {
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.8);
             color: #fff;
             font-size: 5px;
             font-weight: 700;
@@ -766,8 +853,8 @@
             background: none;
             border: none;
             text-align: center;
-            font-size: 22px;
-            line-height: 22px;
+            font-size: 20px;
+            line-height: 20px;
             animation: alertPulse 1s infinite;
             filter: drop-shadow(0 0 8px rgba(231,76,60,0.8));
         }
@@ -785,6 +872,13 @@
         @keyframes alertPulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.2); }
+        }
+        .alert-circle {
+            animation: circlePulse 1.5s infinite;
+        }
+        @keyframes circlePulse {
+            0% { opacity: 0.8; r: 50; }
+            100% { opacity: 0; r: 200; }
         }
 
         /* ===== LOGIN ===== */
@@ -805,20 +899,21 @@
             display: none;
         }
         .login-box {
-            background: rgba(15,34,56,0.95);
+            background: rgba(15, 34, 56, 0.95);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-radius: 16px;
-            padding: 20px 24px;
-            max-width: 400px;
+            padding: 20px;
+            max-width: 420px;
             width: 100%;
             border: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
             max-height: 90vh;
             overflow-y: auto;
         }
         .login-box .logo {
             font-size: 1.4rem;
             font-weight: 800;
-            text-align: center;
         }
         .login-box .logo span {
             color: #f5c842;
@@ -826,7 +921,6 @@
         .login-box .subtitle {
             font-size: 0.55rem;
             color: #8ab4d6;
-            text-align: center;
             margin-bottom: 12px;
         }
         .login-box label {
@@ -835,7 +929,7 @@
             font-size: 0.5rem;
             font-weight: 600;
             color: #8ab4d6;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
             margin-top: 8px;
         }
         .login-box input, .login-box select {
@@ -848,10 +942,6 @@
             font-size: 0.65rem;
             font-family: inherit;
         }
-        .login-box input:focus, .login-box select:focus {
-            outline: none;
-            border-color: #f5c842;
-        }
         .login-box .group-select-row {
             display: flex;
             gap: 6px;
@@ -863,7 +953,7 @@
             background: rgba(52,152,219,0.08);
             border: 1px solid rgba(52,152,219,0.12);
             border-radius: 6px;
-            padding: 4px 8px;
+            padding: 5px 8px;
             margin-top: 4px;
             font-size: 0.45rem;
             color: #8ab4d6;
@@ -884,7 +974,6 @@
             cursor: pointer;
             margin-top: 12px;
             font-family: inherit;
-            transition: transform 0.1s;
         }
         .btn-login:active {
             transform: scale(0.96);
@@ -893,7 +982,6 @@
             font-size: 0.4rem;
             color: #5a7f9e;
             margin-top: 6px;
-            text-align: center;
         }
         .warning-box {
             background: rgba(231,76,60,0.08);
@@ -904,14 +992,14 @@
             font-size: 0.45rem;
             color: #e74c3c;
             text-align: left;
-            line-height: 1.2;
+            line-height: 1.3;
         }
         .family-section {
             background: rgba(52,152,219,0.08);
             border: 1px solid rgba(52,152,219,0.12);
             border-radius: 6px;
             padding: 6px;
-            margin-top: 6px;
+            margin-top: 8px;
             text-align: left;
             display: none;
         }
@@ -920,13 +1008,13 @@
             margin-top: 2px;
         }
         .family-section .hint {
-            font-size: 0.4rem;
+            font-size: 0.35rem;
             color: #5a7f9e;
         }
 
         /* ===== POPUPS ===== */
         .mapboxgl-popup-content {
-            background: rgba(10,26,42,0.95) !important;
+            background: rgba(10, 26, 42, 0.95) !important;
             backdrop-filter: blur(10px) !important;
             color: #fff !important;
             border: 1px solid rgba(255,255,255,0.06) !important;
@@ -935,7 +1023,7 @@
             font-size: 0.45rem !important;
         }
         .mapboxgl-popup-tip {
-            border-top-color: rgba(10,26,42,0.95) !important;
+            border-top-color: rgba(10, 26, 42, 0.95) !important;
         }
 
         /* ===== OFFLINE OVERLAY ===== */
@@ -946,8 +1034,9 @@
             right: 0;
             bottom: 0;
             z-index: 50;
-            background: rgba(11,23,37,0.92);
+            background: rgba(11, 23, 37, 0.92);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             display: none;
             flex-direction: column;
             align-items: center;
@@ -1015,6 +1104,11 @@
             cursor: pointer;
             margin: 2px;
         }
+        .offline-overlay .status-offline {
+            font-size: 0.45rem;
+            color: #4a6a88;
+            margin-top: 4px;
+        }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 480px) {
@@ -1023,40 +1117,47 @@
             .header .status { font-size: 0.4rem; }
             .loc-bar { font-size: 0.4rem; padding: 2px 8px; }
             .loc-bar .stats { font-size: 0.35rem; gap: 4px; }
-            .group-card { min-width: 85px; padding: 4px 6px; }
+            .group-card { min-width: 90px; padding: 4px 6px; }
             .group-card .g-name { font-size: 0.5rem; }
+            .group-card .g-status { font-size: 0.35rem; }
             .btn-alert { font-size: 0.55rem; padding: 6px 10px; }
-            .tw-messages { max-height: 35px; font-size: 0.4rem; }
+            .btn-alert .sub { font-size: 0.3rem; }
+            .tw-header { font-size: 0.45rem; }
+            .tw-messages { font-size: 0.4rem; max-height: 35px; }
             .tw-controls button { font-size: 0.4rem; padding: 3px 6px; min-width: 30px; }
             .map-controls { bottom: 80px; right: 5px; }
             .map-controls button { font-size: 0.4rem; padding: 4px 8px; }
-            .position-toggle { bottom: 80px; left: 5px; font-size: 0.4rem; padding: 4px 10px; }
-            .theme-toggle { bottom: 60px; right: 5px; font-size: 0.4rem; padding: 2px 8px; }
+            .position-toggle { bottom: 80px; left: 5px; font-size: 0.4rem; padding: 3px 8px; }
+            .theme-toggle { bottom: 45px; right: 5px; font-size: 0.4rem; padding: 2px 8px; }
             .theme-toggle .track { width: 24px; height: 14px; }
             .theme-toggle .thumb { width: 10px; height: 10px; }
             .theme-toggle.night .thumb { left: 12px; }
-            .map-legend { top: 65px; left: 5px; padding: 4px 8px; min-width: 70px; }
-            .map-legend .legend-item { font-size: 0.35rem; }
-            .city-menu { top: 65px; right: 5px; }
-            .city-menu .city-toggle { font-size: 0.45rem; padding: 4px 8px; }
-            .city-menu .city-list button { font-size: 0.4rem; padding: 3px 8px; }
-            .login-box { padding: 16px; }
-            .login-box .logo { font-size: 1.2rem; }
-            .login-box input, .login-box select { font-size: 0.6rem; padding: 6px 8px; }
+            .map-legend { top: 65px; left: 5px; padding: 4px 6px; font-size: 0.35rem; min-width: 70px; }
+            .map-legend .legend-title { font-size: 0.4rem; }
+            .city-menu-container { top: 65px; right: 5px; }
+            .city-menu-container .city-toggle { font-size: 0.4rem; padding: 3px 8px; }
+            .city-menu-container .city-dropdown button { font-size: 0.4rem; padding: 3px 6px; }
+            .login-box { padding: 14px; }
+            .login-box .logo { font-size: 1.1rem; }
             .offline-overlay h2 { font-size: 1rem; }
             .offline-overlay .icon { font-size: 2.5rem; }
+            .offline-overlay .btn-offline-alert { font-size: 0.7rem; padding: 8px 16px; }
         }
 
         @media (max-height: 650px) {
-            .bottom-overlay { max-height: 35vh; }
-            .group-card { padding: 3px 6px; min-width: 70px; }
+            .bottom-overlay { max-height: 40vh; }
+            .group-card { padding: 3px 6px; min-width: 75px; }
             .group-card .g-name { font-size: 0.45rem; }
-            .group-card .g-actions button { font-size: 0.35rem; padding: 1px 6px; }
+            .group-card .g-status { font-size: 0.3rem; }
+            .group-card .g-actions button { font-size: 0.3rem; padding: 0 5px; }
             .btn-alert { padding: 4px 8px; font-size: 0.5rem; }
             .tw-messages { max-height: 30px; }
-            .tw-controls button { font-size: 0.35rem; padding: 2px 5px; }
+            .tw-controls button { font-size: 0.35rem; padding: 2px 4px; }
+            .tw-header { font-size: 0.4rem; }
             .header { padding: 3px 8px; }
             .header .logo { font-size: 0.6rem; }
+            .header .user-badge { font-size: 0.35rem; padding: 0 5px; }
+            .header .status { font-size: 0.35rem; }
             .loc-bar { font-size: 0.35rem; padding: 2px 6px; }
             .loc-bar .stats { font-size: 0.3rem; }
         }
@@ -1072,7 +1173,7 @@
     <div class="login-screen" id="loginScreen">
         <div class="login-box">
             <div class="logo">🛡️ FOKON'<span>ALERT</span></div>
-            <div class="subtitle">Système de sécurité communautaire · Madagascar</div>
+            <div class="subtitle">Système de sécurité communautaire · Madagascar 3D</div>
 
             <label>👤 Type de compte</label>
             <select id="loginType" onchange="updateLoginInfo()">
@@ -1097,7 +1198,7 @@
 
             <label>🏘️ Votre quartier</label>
             <select id="loginQuartier">
-                <option value="">-- Sélectionnez --</option>
+                <option value="">-- Sélectionnez votre quartier --</option>
             </select>
             <div class="quartier-info">
                 📍 <strong>Cercle de vigilance</strong> · <span id="quartierCercle">Mahabibo</span>
@@ -1113,7 +1214,7 @@
                     </select>
                 </div>
                 <div class="quartier-info" style="margin-top:4px;">
-                    🎯 Vous rejoignez le <strong id="groupeInfo">Groupe A</strong>
+                    🎯 Vous rejoignez le <strong id="groupeInfo">Groupe A</strong> · <span id="groupeMembres">6 membres</span>
                 </div>
             </div>
 
@@ -1135,7 +1236,7 @@
         </div>
     </div>
 
-    <!-- ===== CARTE ===== -->
+    <!-- ===== CARTE PLEIN ÉCRAN ===== -->
     <div id="map"></div>
 
     <!-- ===== TOAST ===== -->
@@ -1155,11 +1256,13 @@
             <span style="display:block;font-size:0.5rem;font-weight:400;opacity:0.8;">Stockée & envoyée plus tard</span>
         </button>
         <button class="retry-btn" onclick="checkNetworkAndRetry()">🔄 Vérifier réseau</button>
+        <div class="status-offline" id="offlineStatus">📱 Mode hors-ligne</div>
     </div>
 
     <!-- ===== OVERLAY PRINCIPAL ===== -->
     <div class="overlay" id="mainOverlay" style="display:none;">
 
+        <!-- HEADER + BANNIERE -->
         <div>
             <div class="offline-banner" id="offlineBanner">
                 📡 MODE HORS-LIGNE - Alertes stockées localement
@@ -1174,6 +1277,7 @@
                         <span class="dot" id="statusDot"></span>
                         <span id="connectionStatus">Connecté</span>
                     </span>
+                    <span class="pending-badge-global" id="pendingBadgeGlobal">📡 0 en attente</span>
                     <span class="user-badge" id="profileBadge">👤 Civil</span>
                     <span class="user-badge" id="quartierBadge">📍 Quartier</span>
                     <button class="btn-logout" onclick="doLogout()">🚪</button>
@@ -1189,12 +1293,15 @@
                 <div class="stats">
                     <span>👥 <span class="num" id="groupCount">3</span></span>
                     <span>🟢 <span class="num" id="memberCount">15</span></span>
+                    <span>⏱️ <span class="num" id="patrolCount">4</span></span>
                     <span>📡 <span class="num" id="onlineCount">12</span></span>
                 </div>
             </div>
         </div>
 
+        <!-- BOTTOM -->
         <div class="bottom-overlay">
+
             <div class="section-title">👥 Groupes de vigilance</div>
             <div class="group-scroll" id="groupList"></div>
 
@@ -1210,12 +1317,15 @@
                 <div class="tw-header">
                     <span class="tw-title">
                         🎙️ Talkie-Walkie
+                        <span class="audio-wave" id="audioWave">
+                            <span></span><span></span><span></span><span></span><span></span>
+                        </span>
                         <span class="audio-indicator" id="audioIndicator"></span>
                     </span>
                     <span class="tw-channel" id="twChannel">🔓 Canal général</span>
                 </div>
                 <div class="tw-messages" id="twMessages">
-                    <div class="tw-msg"><span class="who system">🔄 Système</span> <span class="time">--:--</span> — Prêt</div>
+                    <div class="tw-msg"><span class="who system">🔄 Système</span> <span class="time">--:--</span> — En attente</div>
                 </div>
                 <div class="tw-controls">
                     <button id="twListen" class="record listening">🎧 Écouter</button>
@@ -1228,36 +1338,23 @@
         </div>
     </div>
 
-    <!-- ===== LÉGENDE EN HAUT À GAUCHE ===== -->
-    <div class="map-legend" id="mapLegend" style="display:none;">
-        <div class="legend-title">📋 LÉGENDE</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#f5c842;"></span> Police</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#8e44ad;"></span> Gendarmerie</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#e74c3c;"></span> Groupe A</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#2ecc71;"></span> Groupe B</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#3498db;"></span> Groupe C</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#ffd700;"></span> Cercle vigilance</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#ff6b6b;"></span> Itinéraire</div>
-    </div>
-
     <!-- ===== MENU VILLES EN HAUT À DROITE ===== -->
-    <div class="city-menu" id="cityMenu" style="display:none;">
-        <button class="city-toggle" onclick="toggleCityMenu()">
-            📍 Villes <span id="cityArrow">▾</span>
-        </button>
-        <div class="city-list" id="cityList">
-            <button data-lat="-18.8792" data-lng="47.5079">Tananarive</button>
-            <button data-lat="-15.7167" data-lng="46.3167">Majunga</button>
-            <button data-lat="-12.2833" data-lng="49.2833">Diego</button>
-            <button data-lat="-18.1523" data-lng="49.4023">Tamatave</button>
-            <button data-lat="-13.3125" data-lng="48.2625">Nosy Be</button>
-            <button data-lat="-21.4333" data-lng="47.0833">Fianar</button>
-            <button data-lat="-23.35" data-lng="43.6667">Toliara</button>
+    <div class="city-menu-container" id="cityMenu">
+        <button class="city-toggle" onclick="toggleCityMenu()">📍 Villes ▾</button>
+        <div class="city-dropdown" id="cityDropdown">
+            <button data-lat="-18.8792" data-lng="47.5079">🇲🇬 Tananarive</button>
+            <button data-lat="-15.7167" data-lng="46.3167">🌊 Majunga</button>
+            <button data-lat="-12.2833" data-lng="49.2833">⛵ Diego</button>
+            <button data-lat="-18.1523" data-lng="49.4023">🏖️ Tamatave</button>
+            <button data-lat="-13.3125" data-lng="48.2625">🌴 Nosy Be</button>
+            <button data-lat="-21.4333" data-lng="47.0833">⛰️ Fianarantsoa</button>
+            <button data-lat="-23.35" data-lng="43.6667">🏝️ Toliara</button>
         </div>
     </div>
 
-    <!-- ===== BOUTONS CARTE ===== -->
+    <!-- ===== MAP CONTROLS ===== -->
     <div class="map-controls" id="mapControls" style="display:none;">
+        <button id="btnLocate" onclick="toggleMyPosition()">📍</button>
         <button onclick="clearRoutes()">🗑️ Itinéraires</button>
     </div>
 
@@ -1272,8 +1369,20 @@
         <div class="track"><div class="thumb"></div></div>
     </button>
 
+    <!-- ===== LÉGENDE EN HAUT À GAUCHE ===== -->
+    <div class="map-legend" id="mapLegend" style="display:none;">
+        <div class="legend-title">📍 LÉGENDE</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#f5c842;"></span> Police</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#8e44ad;"></span> Gendarmerie</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#e74c3c;"></span> Groupe A</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#2ecc71;"></span> Groupe B</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#3498db;"></span> Groupe C</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#ffd700;"></span> Cercle vigilance</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#ff6b6b;"></span> Itinéraire</div>
+    </div>
+
     <!-- ============================================================ -->
-    <!-- ===== JAVASCRIPT ===== -->
+    <!-- ===== JAVASCRIPT (COMPLET) ===== -->
     <!-- ============================================================ -->
     <script>
         (function() {
@@ -1356,9 +1465,13 @@
             let alertLocation = null;
             let peer = null, peerId = '';
             let currentCall = null, localStream = null, isCallActive = false;
+            let listenInterval = null;
+            let audioCtx = null, noiseGain = null, noiseSource = null;
             let pendingAlerts = [];
+            let isOfflineMode = false;
+            let lastKnownLat = null, lastKnownLng = null;
+            let networkCheckInterval = null;
             let routeSources = {};
-            let cityMenuOpen = false;
 
             // =========================================================
             // 3. GESTION HORS-LIGNE
@@ -1391,6 +1504,7 @@
             function updatePendingUI() {
                 const count = pendingAlerts.length;
                 const badge = document.getElementById('pendingCountBadge');
+                const badgeGlobal = document.getElementById('pendingBadgeGlobal');
                 const offlineCount = document.getElementById('offlinePendingCount');
                 const pendingBadge = document.getElementById('pendingBadge');
                 
@@ -1400,6 +1514,14 @@
                         badge.textContent = count;
                     } else {
                         badge.classList.remove('show');
+                    }
+                }
+                if (badgeGlobal) {
+                    if (count > 0) {
+                        badgeGlobal.classList.add('show');
+                        badgeGlobal.textContent = '📡 ' + count + ' en attente';
+                    } else {
+                        badgeGlobal.classList.remove('show');
                     }
                 }
                 if (offlineCount) offlineCount.textContent = count;
@@ -1438,6 +1560,7 @@
                     savePendingAlerts();
                     showToast('📤 ' + synced.length + ' alerte(s) envoyée(s) !', 'success');
                     addTwMessage('🔄 Système', '📤 ' + synced.length + ' alerte(s) synchronisée(s)', 'system');
+                    playSquelch(0.1);
                 }
                 updatePendingUI();
             }
@@ -1452,6 +1575,7 @@
                     if (pendingAlerts.length > 0) syncPendingAlerts();
                     showToast('✅ Réseau rétabli !', 'success');
                     addTwMessage('🔄 Système', '✅ Réseau rétabli', 'system');
+                    playSquelch(0.1);
                 } else {
                     showOfflineScreen();
                     showToast('📡 Pas de réseau', 'warning');
@@ -1507,6 +1631,7 @@
                 const g = document.getElementById('loginGroupe').value;
                 const data = GROUP_DATA[g];
                 document.getElementById('groupeInfo').textContent = 'Groupe ' + g;
+                document.getElementById('groupeMembres').textContent = data.members + ' membres · ' + data.status;
             }
 
             function updateLoginInfo() {
@@ -1522,7 +1647,112 @@
             }
 
             // =========================================================
-            // 5. TOAST
+            // 5. AUDIO
+            // =========================================================
+            function initAudio() {
+                try { audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                    noiseGain = audioCtx.createGain();
+                    noiseGain.gain.value = 0;
+                    noiseGain.connect(audioCtx.destination); } catch(e) {}
+            }
+
+            function createWhiteNoise() {
+                if (!audioCtx) return;
+                try {
+                    const buf = audioCtx.createBuffer(1, 2 * audioCtx.sampleRate, audioCtx.sampleRate);
+                    const d = buf.getChannelData(0);
+                    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+                    noiseSource = audioCtx.createBufferSource();
+                    noiseSource.buffer = buf;
+                    noiseSource.loop = true;
+                    noiseSource.connect(noiseGain);
+                    noiseSource.start();
+                } catch(e) {}
+            }
+
+            function playSquelch(d = 0.1) {
+                if (!audioCtx) return;
+                try { const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                    o.type = 'square';
+                    o.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    o.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + d);
+                    g.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d);
+                    o.connect(g); g.connect(audioCtx.destination);
+                    o.start(); o.stop(audioCtx.currentTime + d); } catch(e) {}
+            }
+
+            function playBeepStart() {
+                if (!audioCtx) return;
+                try { const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                    o.type = 'sine';
+                    o.frequency.setValueAtTime(1000, audioCtx.currentTime);
+                    o.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.04);
+                    g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    o.connect(g); g.connect(audioCtx.destination);
+                    o.start(); o.stop(audioCtx.currentTime + 0.1); } catch(e) {}
+            }
+
+            function playBeepEnd() {
+                if (!audioCtx) return;
+                try { const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                    o.type = 'sine';
+                    o.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                    o.frequency.setValueAtTime(800, audioCtx.currentTime + 0.04);
+                    g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+                    o.connect(g); g.connect(audioCtx.destination);
+                    o.start(); o.stop(audioCtx.currentTime + 0.12); } catch(e) {}
+            }
+
+            function playRadioStatic(i = 0.15) {
+                if (!audioCtx || !noiseGain) return;
+                try { noiseGain.gain.setValueAtTime(i, audioCtx.currentTime); } catch(e) {}
+            }
+
+            function stopRadioStatic() {
+                if (!noiseGain) return;
+                try { noiseGain.gain.setValueAtTime(0, audioCtx.currentTime); } catch(e) {}
+            }
+
+            function playPTTClick() {
+                if (!audioCtx) return;
+                try { const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                    o.type = 'triangle';
+                    o.frequency.setValueAtTime(500, audioCtx.currentTime);
+                    o.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.02);
+                    g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.03);
+                    o.connect(g); g.connect(audioCtx.destination);
+                    o.start(); o.stop(audioCtx.currentTime + 0.03); } catch(e) {}
+            }
+
+            function simulerTransmission(d = 1200) {
+                playPTTClick();
+                playBeepStart();
+                playSquelch(0.06);
+                setTimeout(() => playRadioStatic(0.1), 60);
+                setTimeout(() => { playBeepEnd(); playSquelch(0.06); stopRadioStatic(); playPTTClick(); }, d);
+            }
+
+            function playAlertSound() {
+                if (!audioCtx) return;
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => {
+                        try { const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                            o.type = 'square';
+                            o.frequency.setValueAtTime(800, audioCtx.currentTime);
+                            g.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                            g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                            o.connect(g); g.connect(audioCtx.destination);
+                            o.start(); o.stop(audioCtx.currentTime + 0.2); } catch(e) {}
+                    }, i * 300);
+                }
+            }
+
+            // =========================================================
+            // 6. TOAST
             // =========================================================
             function showToast(msg, type) {
                 const t = document.getElementById('toast');
@@ -1534,7 +1764,7 @@
             window.showToast = showToast;
 
             // =========================================================
-            // 6. CONNEXION
+            // 7. CONNEXION
             // =========================================================
             window.doLogin = function() {
                 const type = document.getElementById('loginType').value;
@@ -1563,19 +1793,22 @@
                 document.getElementById('mainOverlay').style.display = 'flex';
                 document.getElementById('mapControls').style.display = 'flex';
                 document.getElementById('positionToggle').style.display = 'flex';
-                document.getElementById('cityMenu').style.display = 'block';
                 document.getElementById('themeToggleBtn').style.display = 'flex';
                 document.getElementById('mapLegend').style.display = 'block';
+                document.getElementById('cityMenu').style.display = 'block';
 
                 setupUI();
                 if (navigator.onLine) { initMap(); } else { showOfflineScreen(); }
                 initPeerJS();
                 getUserLocation();
+                initAudio();
+                createWhiteNoise();
                 loadPendingAlerts();
 
                 const info = MATRICE[type] || MATRICE['volontaire'];
                 showToast('✅ Connecté · ' + info.nom + ' · ' + quartier, 'success');
                 addTwMessage('🔄 Système', '✅ ' + name + ' · ' + info.emoji + ' ' + info.nom + ' · ' + quartier + ' (Groupe ' + groupe + ')', 'system');
+                playSquelch(0.1);
                 if (pendingAlerts.length > 0 && navigator.onLine) syncPendingAlerts();
             };
 
@@ -1585,12 +1818,13 @@
                 if (localStream) { localStream.getTracks().forEach(t => t.stop()); }
                 userProfile = null;
                 positionShared = false;
+                stopRadioStatic();
                 document.getElementById('mainOverlay').style.display = 'none';
                 document.getElementById('mapControls').style.display = 'none';
                 document.getElementById('positionToggle').style.display = 'none';
-                document.getElementById('cityMenu').style.display = 'none';
                 document.getElementById('themeToggleBtn').style.display = 'none';
                 document.getElementById('mapLegend').style.display = 'none';
+                document.getElementById('cityMenu').style.display = 'none';
                 document.getElementById('loginScreen').classList.remove('hidden');
                 document.getElementById('offlineOverlay').classList.remove('show');
                 document.getElementById('offlineBanner').classList.remove('show');
@@ -1598,7 +1832,7 @@
             };
 
             // =========================================================
-            // 7. INTERFACE
+            // 8. INTERFACE
             // =========================================================
             function setupUI() {
                 const info = MATRICE[userProfile.type] || MATRICE['volontaire'];
@@ -1645,10 +1879,14 @@
                         <div class="g-status">${g.visible ? g.label : '🔒 Masqué'} ${isOffline ? '📡' : ''}</div>
                         ${g.visible ? `
                         <div class="g-members">👥 ${members || 'En service'}</div>
-                        ${data ? `<div style="font-size:0.4rem;color:#5a7f9e;">🚗 ${data.vehicles} véhicule${data.vehicles > 1 ? 's' : ''} · 📡 Canal ${data.canal}</div>` : ''}
+                        ${data ? `<div class="g-details">
+                            <span>🚗 ${data.vehicles} véhicule${data.vehicles > 1 ? 's' : ''}</span>
+                            <span>📡 Canal ${data.canal}</span>
+                            <span>🟢 ${isOffline ? '📡 hors-ligne' : data.online + ' en ligne'}</span>
+                        </div>` : ''}
                         <div class="g-actions">
                             <button class="primary" onclick="showOnMap('${g.id}')">📍 Voir</button>
-                            <button onclick="callTeam('${g.id}')">📡 Appel</button>
+                            <button class="call" onclick="callTeam('${g.id}')">📡 Appel</button>
                             ${alertLocation ? `<button class="route" onclick="showRoute('${g.id}')">🗺️ Itinéraire</button>` : ''}
                         </div>
                         <div class="g-online ${isOffline ? 'offline' : ''}"></div>` : `
@@ -1670,16 +1908,29 @@
             }
 
             // =========================================================
-            // 8. MENU VILLES
+            // 9. MENU VILLES
             // =========================================================
             window.toggleCityMenu = function() {
-                cityMenuOpen = !cityMenuOpen;
-                document.getElementById('cityList').classList.toggle('open', cityMenuOpen);
-                document.getElementById('cityArrow').textContent = cityMenuOpen ? '▴' : '▾';
+                const dropdown = document.getElementById('cityDropdown');
+                dropdown.classList.toggle('open');
             };
 
+            // Fermer le menu quand on clique sur une ville
+            document.querySelectorAll('#cityDropdown button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.getElementById('cityDropdown').classList.remove('open');
+                    if (map) {
+                        const lat = parseFloat(this.dataset.lat);
+                        const lng = parseFloat(this.dataset.lng);
+                        map.flyTo({ center: [lng, lat], zoom: 15.5, pitch: 55, duration: 1800 });
+                        showToast('📍 ' + this.textContent.trim(), 'info');
+                        playSquelch(0.06);
+                    }
+                });
+            });
+
             // =========================================================
-            // 9. CARTE
+            // 10. CARTE
             // =========================================================
             const communesCoords = { majunga: [-15.7167, 46.3167], tana: [-18.8792, 47.5079], tamatave: [-18.1500, 49.4000],
                 fianar: [-21.4500, 47.0800], diego: [-12.2800, 49.2900], toliara: [-23.3500, 43.6667] };
@@ -1723,18 +1974,6 @@
                         initGroupPositions(center);
                         addGroupMarkers();
                         addCercleVigilance();
-
-                        document.querySelectorAll('#cityList button').forEach(btn => {
-                            btn.addEventListener('click', function() {
-                                const lat = parseFloat(this.dataset.lat);
-                                const lng = parseFloat(this.dataset.lng);
-                                map.flyTo({ center: [lng, lat], zoom: 15.5, pitch: 55, duration: 1800 });
-                                showToast('📍 ' + this.textContent, 'info');
-                                cityMenuOpen = false;
-                                document.getElementById('cityList').classList.remove('open');
-                                document.getElementById('cityArrow').textContent = '▾';
-                            });
-                        });
 
                         applyTheme();
                     });
@@ -1828,13 +2067,15 @@
             }
 
             // =========================================================
-            // 10. GÉOLOCALISATION
+            // 11. GÉOLOCALISATION
             // =========================================================
             function getUserLocation() {
                 if (!navigator.geolocation) return;
                 navigator.geolocation.getCurrentPosition(
                     pos => { userLat = pos.coords.latitude;
-                        userLng = pos.coords.longitude; },
+                        userLng = pos.coords.longitude;
+                        lastKnownLat = userLat;
+                        lastKnownLng = userLng; },
                     () => {
                         const commune = userProfile?.commune,
                             quartier = userProfile?.quartier;
@@ -1842,14 +2083,20 @@
                             const data = COMMUNES_DATA[commune].cercles[quartier];
                             userLat = data.lat;
                             userLng = data.lng;
+                            lastKnownLat = userLat;
+                            lastKnownLng = userLng;
                         } else { userLat = -15.7167;
-                            userLng = 46.3167; }
+                            userLng = 46.3167;
+                            lastKnownLat = userLat;
+                            lastKnownLng = userLng; }
                     },
                     { enableHighAccuracy: true, timeout: 10000 }
                 );
                 navigator.geolocation.watchPosition(pos => {
                     userLat = pos.coords.latitude;
                     userLng = pos.coords.longitude;
+                    lastKnownLat = userLat;
+                    lastKnownLng = userLng;
                     if (positionShared && userMarker && navigator.onLine) {
                         userMarker.setLngLat([userLng, userLat]);
                     }
@@ -1861,9 +2108,11 @@
                 if (positionShared) {
                     if (userMarker) { userMarker.remove(); userMarker = null; }
                     positionShared = false;
+                    document.getElementById('btnLocate').classList.remove('active');
                     document.getElementById('positionToggle').classList.remove('active');
                     showToast('🔒 Position masquée', 'info');
                     addTwMessage('🔄 Système', '🔒 Position masquée', 'system');
+                    playSquelch(0.08);
                 } else {
                     const info = MATRICE[userProfile.type] || MATRICE['volontaire'];
                     const el = document.createElement('div');
@@ -1878,48 +2127,45 @@
                         showToast('📍 Position enregistrée (hors-ligne)', 'info');
                     }
                     positionShared = true;
+                    document.getElementById('btnLocate').classList.add('active');
                     document.getElementById('positionToggle').classList.add('active');
                     showToast('🟢 Position activée', 'success');
                     addTwMessage('🔄 Système', '📍 Position activée · ' + userProfile.quartier, 'system');
+                    playSquelch(0.12);
                 }
             };
 
             // =========================================================
-            // 11. ACTIONS GROUPES
+            // 12. ACTIONS GROUPES
             // =========================================================
             window.showOnMap = function(team) {
                 if (!navigator.onLine || !map) { showToast('📡 Hors-ligne', 'warning'); return; }
                 const pos = groupPositions[team] || { lat: -15.7167, lng: 46.3167 };
                 map.flyTo({ center: [pos.lng, pos.lat], zoom: 16.5, pitch: 55, duration: 1200 });
+                if (groupMarkers[team]) groupMarkers[team].togglePopup();
                 showToast('📍 ' + team.replace('groupe', 'Groupe '), 'info');
+                playSquelch(0.06);
             };
 
             window.callTeam = function(team) {
                 if (!navigator.onLine) { showToast('📡 Hors-ligne', 'warning'); return; }
-                showToast('📡 Appel ' + team.replace('groupe', 'Groupe ') + '...', 'info');
-                addTwMessage('🔄 Système', '📡 Appel ' + team.replace('groupe', 'Groupe ') + '...', 'system');
+                const targetId = prompt('📡 Appel ' + team.replace('groupe', 'Groupe ') + '\nEntrez l\'ID du destinataire:\n(Votre ID: ' + peerId + ')');
+                if (!targetId || targetId === peerId) return;
                 
-                // Appel réel via PeerJS
-                if (peer && !isCallActive) {
-                    const targetId = prompt('Entrez l\'ID du destinataire (Groupe ' + team.replace('groupe', '') + '):');
-                    if (targetId && targetId !== peerId) {
-                        navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
-                            .then(stream => {
-                                localStream = stream;
-                                const call = peer.call(targetId, stream);
-                                startCall(call);
-                                addTwMessage('📞 Appel', 'Appel vers ' + targetId, 'system');
-                            })
-                            .catch(() => showToast('❌ Erreur micro', 'error'));
-                    }
-                } else {
-                    // Simulation d'appel (pas de simulation - c'est un vrai appel)
-                    addTwMessage(team.replace('groupe', 'Groupe '), '📞 Appel en cours...', team.replace('groupe', 'g'));
-                }
+                showToast('📡 Appel ' + team.replace('groupe', 'Groupe '), 'info');
+                addTwMessage('📞 Appel', 'Appel ' + team.replace('groupe', 'Groupe ') + ' vers ' + targetId, 'system');
+                
+                navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
+                    .then(stream => {
+                        localStream = stream;
+                        const call = peer.call(targetId, stream);
+                        startCall(call);
+                    })
+                    .catch(() => { showToast('❌ Erreur micro', 'error'); });
             };
 
             // =========================================================
-            // 12. ITINÉRAIRES
+            // 13. ITINÉRAIRES
             // =========================================================
             function calculateRoute(sLng, sLat, eLng, eLat) {
                 const points = [];
@@ -1947,10 +2193,12 @@
                     map.addLayer({ id: layerId, type: 'line', source: sourceId, layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': color, 'line-width': 4, 'line-opacity': 0.8, 'line-dasharray': [6, 4] } });
                     routeSources[groupId] = { sourceId, layerId };
                     
+                    // Calcul du temps d'arrivée
                     const distance = Math.sqrt(Math.pow((startPos.lat - endPos.lat) * 111, 2) + Math.pow((startPos.lng - endPos.lng) * 111 * Math.cos(startPos.lat * Math.PI / 180), 2));
                     const tempsMin = Math.round(distance / 30 * 60);
                     const tempsStr = tempsMin < 1 ? '< 1 min' : tempsMin + ' min';
                     
+                    // Popup au milieu de l'itinéraire
                     const midIdx = Math.floor(points.length / 2);
                     const midPoint = points[midIdx] || points[0];
                     const popup = new mapboxgl.Popup({ offset: 10, closeButton: true })
@@ -1962,6 +2210,7 @@
                         `)
                         .addTo(map);
                     routeSources[groupId + '-popup'] = popup;
+                    
                 } catch(e) {}
             }
 
@@ -1976,6 +2225,7 @@
                 showToast('🗺️ Itinéraire tracé pour ' + team.replace('groupe', 'Groupe '), 'info');
                 addTwMessage('🗺️ Itinéraire', 'Tracé vers l\'alerte · ' + team.replace('groupe', 'Groupe '), team.replace(
                 'groupe', 'g'));
+                simulerTransmission(800);
             };
 
             window.clearRoutes = function() {
@@ -1994,10 +2244,11 @@
                 routeSources = {};
                 showToast('🗑️ Itinéraires effacés', 'info');
                 addTwMessage('🔄 Système', '🗑️ Itinéraires effacés', 'system');
+                playPTTClick();
             };
 
             // =========================================================
-            // 13. THEME
+            // 14. THEME
             // =========================================================
             function applyTheme() {
                 const toggle = document.getElementById('themeToggleBtn');
@@ -2027,7 +2278,7 @@
                 setTimeout(applyTheme, 500); })();
 
             // =========================================================
-            // 14. TALKIE-WALKIE
+            // 15. TALKIE-WALKIE
             // =========================================================
             function addTwMessage(who, text, cls) {
                 const container = document.getElementById('twMessages');
@@ -2057,6 +2308,7 @@
                     peer.on('open', (id) => {
                         document.getElementById('twChannel').textContent = '🔓 ID: ' + id.substring(0, 6);
                         addTwMessage('🔄 Système', '🎙️ ID: ' + id.substring(0, 6), 'system');
+                        playSquelch(0.1);
                     });
                     peer.on('call', (call) => {
                         addTwMessage('📞 Appel', 'Appel entrant', 'system');
@@ -2077,6 +2329,7 @@
                 document.getElementById('twStop').disabled = false;
                 document.getElementById('audioIndicator').className = 'audio-indicator active';
                 addTwMessage('🔊 Communication', 'Appel établi', 'system');
+                playSquelch(0.1);
                 call.on('close', () => endCall('🔚 Appel terminé'));
                 call.on('error', () => endCall('❌ Erreur'));
             }
@@ -2089,6 +2342,7 @@
                 document.getElementById('twListen').disabled = false;
                 document.getElementById('twStop').disabled = true;
                 document.getElementById('audioIndicator').className = 'audio-indicator';
+                stopRadioStatic();
                 if (reason) { addTwMessage('🔄 Système', reason, 'system'); showToast(reason, 'info'); }
             }
 
@@ -2116,11 +2370,23 @@
                 if (this.classList.contains('listening')) {
                     this.classList.remove('listening');
                     this.textContent = '🎧 Écouter';
+                    if (listenInterval) { clearInterval(listenInterval);
+                        listenInterval = null; }
+                    stopRadioStatic();
                     document.getElementById('twStatus').textContent = '🔇 Arrêté';
                 } else {
                     this.classList.add('listening');
                     this.textContent = '⏹️ Écoute...';
                     document.getElementById('twStatus').textContent = '🎧 Écoute active';
+                    playRadioStatic(0.04);
+                    playSquelch(0.06);
+                    listenInterval = setInterval(() => {
+                        if (this.classList.contains('listening') && isCallActive) {
+                            // Message réel du talkie-walkie
+                            addTwMessage('📡 Écoute', 'Transmission en cours...', 'system');
+                            playSquelch(0.05);
+                        }
+                    }, 5000);
                 }
             });
 
@@ -2129,10 +2395,11 @@
             document.getElementById('twClear').addEventListener('click', function() {
                 document.getElementById('twMessages').innerHTML = '';
                 addTwMessage('🔄 Système', '🗑️ Effacé', 'system');
+                playPTTClick();
             });
 
             // =========================================================
-            // 15. ALERTE
+            // 16. ALERTE
             // =========================================================
             document.getElementById('btnAlert').addEventListener('click', function() {
                 if (alertActive) { showToast('⚠️ Alerte en cours', 'error'); return; }
@@ -2143,6 +2410,8 @@
                 alertLocation = { lat: userLat, lng: userLng };
                 this.disabled = true;
                 this.innerHTML = '🚨 ALERTE... <span class="sub">⏳ Intervention · Itinéraires tracés</span>';
+
+                playAlertSound();
 
                 const alertData = {
                     lat: userLat,
@@ -2250,6 +2519,7 @@
                         '🚨 SIGNALER UNE URGENCE <span class="sub">⚠️ Alerte immédiate · Itinéraires calculés</span>';
                     showToast('✅ Alerte terminée', 'success');
                     addTwMessage('🔄 Système', '✅ Fin d\'alerte', 'system');
+                    playSquelch(0.1);
                     try { marker.remove(); } catch(e) {}
                     try { map.removeLayer('alert-circle-layer');
                         map.removeSource('alert-circle'); } catch(e) {}
@@ -2283,7 +2553,7 @@
             });
 
             // =========================================================
-            // 16. RACCOURCIS
+            // 17. RACCOURCIS
             // =========================================================
             document.addEventListener('keydown', function(e) {
                 if (e.altKey && e.key === 'a') { e.preventDefault();
@@ -2299,7 +2569,7 @@
             });
 
             // =========================================================
-            // 17. INIT
+            // 18. INIT
             // =========================================================
             document.getElementById('loginType').addEventListener('change', updateLoginInfo);
             document.getElementById('loginCommune').addEventListener('change', function() { updateQuartiers();
@@ -2311,11 +2581,12 @@
             initNetworkDetection();
             loadPendingAlerts();
 
-            console.log('🛡️ FOKON\'ALERT 3D — Version Finale');
-            console.log('📋 Légende en haut à gauche · Villes en haut à droite');
-            console.log('🎙️ Talkie-Walkie réel (PeerJS)');
-            console.log('🚀 Pas de simulations - Tout est réel');
+            console.log('🛡️ FOKON\'ALERT 3D — Groupes A, B, C + Itinéraires + MODE HORS-LIGNE');
+            console.log('🌳 Arbres animés · Bâtiments 3D');
+            console.log('🗺️ Itinéraires automatiques vers l\'alerte avec temps d\'arrivée');
+            console.log('📡 Mode hors-ligne: alertes stockées localement');
             console.log('💡 Alt+A=Alert · Alt+R=Effacer itinéraires · Alt+V=Position');
+            console.log('🎙️ Talkie-Walkie: Appels réels entre groupes');
 
         })();
     </script>
